@@ -1,0 +1,19 @@
+{
+  "name": "attlaz/php-client",
+  "description": "Attlaz PHP Client",
+  "type": "library",
+  "license": [
+    "OSL-3.0",
+    "AFL-3.0"
+  ],
+  "require": {
+    "php": "~7.0.0",
+    "guzzlehttp/guzzle": "6.3.*",
+    "psr/log": "1.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Attlaz\\": "src/"
+    }
+  }
+}
