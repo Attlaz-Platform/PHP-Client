@@ -10,6 +10,7 @@ class Client
     private $endPoint;
     private $client;
 
+    private $authorizationCode;
     private $clientId;
     private $clientSecret;
 
@@ -26,8 +27,9 @@ class Client
         ]);
     }
 
-    public function setCredentials(string $clientId, string $clientSecret)
+    public function setCredentials(string $authorizationCode, string $clientId, string $clientSecret)
     {
+        $this->authorizationCode = $authorizationCode;
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
     }
@@ -46,8 +48,7 @@ class Client
             ],
             'form_params' => [
                 'grant_type' => 'authorization_code',
-                'code'       => 'e78351c1b13dc09a3c51d24123b2dfb2bf178306',
-                'scope'      => 'a',
+                'code'       => $this->authorizationCode,
             ],
 
         ];
