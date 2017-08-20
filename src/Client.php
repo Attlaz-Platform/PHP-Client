@@ -64,7 +64,8 @@ class Client
     private function sendRequest(RequestInterface $request)
     {
         try {
-            $response = $this->provider->getResponse($request);
+            $response = $this->provider->getHttpClient()
+                                       ->send($request, ['debug' => $this->debug]);
 
             $jsonResponse = \json_decode($response->getBody()
                                                   ->getContents(), true);
@@ -75,10 +76,10 @@ class Client
         return $jsonResponse;
     }
 
-    public function scheduleTask(string $task, array $arguments = [], bool $wait = false)
+    public function scheduleTask(string $command, array $arguments = [], bool $wait = false)
     {
         $body = [
-            'method'    => $task,
+            'command'   => $command,
             'arguments' => $arguments,
         ];
 
@@ -105,9 +106,11 @@ class Client
             $options['body'] = $body;
         }
 
-        $options['debug'] = $this->debug;
+        $options['headers'] = ['Content-Type' => 'application/json'];
 
-        return $this->provider->getAuthenticatedRequest($method, $this->endPoint . $uri, $this->accessToken, $options);
+        $url = $this->endPoint . $uri;
+
+        return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
 }
