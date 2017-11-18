@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Model\Exception\RequestException;
+use Attlaz\Model\ScheduleTaskResult;
 use League\OAuth2\Client\Provider\GenericProvider;
 use Psr\Http\Message\RequestInterface;
 
@@ -76,7 +77,7 @@ class Client
         return $jsonResponse;
     }
 
-    public function scheduleTask(string $command, array $arguments = [], bool $wait = false)
+    public function scheduleTask(string $command, array $arguments = [], bool $wait = false): ScheduleTaskResult
     {
         $body = [
             'command'   => $command,
@@ -87,7 +88,8 @@ class Client
 
         $response = $this->sendRequest($request);
 
-        return $response;
+        //TODO: handle issues
+        return new ScheduleTaskResult($response['success'], $response['id']);
     }
 
     public function ping()
