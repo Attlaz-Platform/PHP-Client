@@ -11,7 +11,7 @@ use Psr\Http\Message\RequestInterface;
 class Client
 {
     private $endPoint;
-    private $branchCode;
+    private $branchId;
 
     private $debug = false;
     private $provider;
@@ -59,7 +59,7 @@ class Client
         if (empty($branchCode)) {
             throw new \InvalidArgumentException('Branch code cannot be empty');
         }
-        $this->branchCode = $branchCode;
+        $this->branchId = $branchCode;
     }
 
     private function sendRequest(RequestInterface $request)
@@ -84,7 +84,7 @@ class Client
             'arguments' => $arguments,
         ];
 
-        $request = $this->createRequest('POST', '/task/execute?branch=' . $this->branchCode, $body);
+        $request = $this->createRequest('POST', '/branch/' . $this->branchId . '/taskexecutionrequest', $body);
 
         $response = $this->sendRequest($request);
 
