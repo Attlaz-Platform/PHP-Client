@@ -7,6 +7,7 @@ class ScheduleTaskResult
 {
     private $success;
     private $id;
+    public $result;
 
     public function __construct(bool $success, string $id)
     {

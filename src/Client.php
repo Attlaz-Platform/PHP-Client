@@ -84,12 +84,24 @@ class Client
             'arguments' => $arguments,
         ];
 
-        $request = $this->createRequest('POST', '/branch/' . $this->branchId . '/taskexecutionrequest', $body);
+        $uri = '/branch/' . $this->branchId . '/taskexecutionrequest';
+        if ($wait) {
+            $uri = $uri . '?wait=true';
+        }
+        $request = $this->createRequest('POST', $uri, $body);
 
         $response = $this->sendRequest($request);
 
         //TODO: handle issues
-        return new ScheduleTaskResult($response['success'], $response['id']);
+        $success = ((string)$response['success'] === "true");
+
+        $data = json_decode($response['result'], true);
+        $data = $data['data'];
+
+        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+        $result->result = $data;
+
+        return $result;
     }
 
     public function ping()
