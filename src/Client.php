@@ -4,13 +4,14 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Model\Exception\RequestException;
+use Attlaz\Model\ScheduleTaskResult;
 use League\OAuth2\Client\Provider\GenericProvider;
 use Psr\Http\Message\RequestInterface;
 
 class Client
 {
     private $endPoint;
-    private $branchCode;
+    private $branchId;
 
     private $debug = false;
     private $provider;
@@ -58,7 +59,7 @@ class Client
         if (empty($branchCode)) {
             throw new \InvalidArgumentException('Branch code cannot be empty');
         }
-        $this->branchCode = $branchCode;
+        $this->branchId = $branchCode;
     }
 
     private function sendRequest(RequestInterface $request)
@@ -76,18 +77,31 @@ class Client
         return $jsonResponse;
     }
 
-    public function scheduleTask(string $command, array $arguments = [], bool $wait = false)
+    public function scheduleTask(string $command, array $arguments = [], bool $wait = false): ScheduleTaskResult
     {
         $body = [
             'command'   => $command,
             'arguments' => $arguments,
         ];
 
-        $request = $this->createRequest('POST', '/task/execute?branch=' . $this->branchCode, $body);
+        $uri = '/branch/' . $this->branchId . '/taskexecutionrequest';
+        if ($wait) {
+            $uri = $uri . '?wait=true';
+        }
+        $request = $this->createRequest('POST', $uri, $body);
 
         $response = $this->sendRequest($request);
 
-        return $response;
+        //TODO: handle issues
+        $success = ((string)$response['success'] === "true");
+
+        $data = json_decode($response['result'], true);
+        $data = $data['data'];
+
+        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+        $result->result = $data;
+
+        return $result;
     }
 
     public function ping()
