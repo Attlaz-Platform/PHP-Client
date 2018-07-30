@@ -11,7 +11,6 @@ use Psr\Http\Message\RequestInterface;
 class Client
 {
     private $endPoint;
-    private $branchId;
 
     private $debug = false;
     private $provider;
@@ -41,7 +40,7 @@ class Client
             'base_uri'                => $endPoint,
             'timeout'                 => 20.0,
         ]);
-        $this->accessToken = $this->provider->getAccessToken('client_credentials');
+        $this->accessToken = $this->provider->getAccessToken('client_credentials', ['scope' => 'all']);
     }
 
     public function enableDebug()
@@ -52,14 +51,6 @@ class Client
     public function disableDebug()
     {
         $this->debug = false;
-    }
-
-    public function setBranch(string $branchCode)
-    {
-        if (empty($branchCode)) {
-            throw new \InvalidArgumentException('Branch code cannot be empty');
-        }
-        $this->branchId = $branchCode;
     }
 
     private function sendRequest(RequestInterface $request)
@@ -77,17 +68,39 @@ class Client
         return $jsonResponse;
     }
 
-    public function scheduleTask(string $command, array $arguments = [], bool $wait = false): ScheduleTaskResult
+    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
     {
         $body = [
             'command'   => $command,
             'arguments' => $arguments,
         ];
 
-        $uri = '/branch/' . $this->branchId . '/taskexecutionrequest';
-        if ($wait) {
-            $uri = $uri . '?wait=true';
-        }
+        $uri = '/branches/' . $branch . '/taskexecutionrequest?wait=true';
+
+        $request = $this->createRequest('POST', $uri, $body);
+
+        $response = $this->sendRequest($request);
+
+        //TODO: handle issues
+        $success = ((string)$response['success'] === "true");
+
+        $data = json_decode($response['result'], true);
+        $data = $data['data'];
+
+        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+        $result->result = $data;
+
+        return $result;
+    }
+
+    public function scheduleTask(string $task, array $arguments = []): ScheduleTaskResult
+    {
+        $body = [
+            'arguments' => $arguments,
+        ];
+
+        $uri = '/tasks/' . $task . '/taskexecutionrequests';
+
         $request = $this->createRequest('POST', $uri, $body);
 
         $response = $this->sendRequest($request);
