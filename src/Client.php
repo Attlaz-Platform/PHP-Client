@@ -75,7 +75,7 @@ class Client
             'arguments' => $arguments,
         ];
 
-        $uri = '/branches/' . $branch . '/taskexecutionrequest?wait=true';
+        $uri = '/branches/' . $branch . '/taskexecutionrequest';
 
         $request = $this->createRequest('POST', $uri, $body);
 
