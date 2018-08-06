@@ -81,11 +81,14 @@ class Client
 
         $response = $this->sendRequest($request);
 
-        //TODO: handle issues
-        $success = ((string)$response['success'] === "true");
+        //TODO: validate response & handle issues
+        $success = ($response['success'] === true || $response['success'] === 'true');
 
-        $data = json_decode($response['result'], true);
-        $data = $data['data'];
+        $data = null;
+        if (isset($response['result']) && !empty($response['result'])) {
+            $data = json_decode($response['result'], true);
+            $data = $data['data'];
+        }
 
         $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
         $result->result = $data;
@@ -105,8 +108,8 @@ class Client
 
         $response = $this->sendRequest($request);
 
-        //TODO: handle issues
-        $success = ((string)$response['success'] === "true");
+        //TODO: validate response & handle issues
+        $success = ($response['success'] === true || $response['success'] === 'true');
 
         $data = json_decode($response['result'], true);
         $data = $data['data'];
@@ -115,14 +118,6 @@ class Client
         $result->result = $data;
 
         return $result;
-    }
-
-    public function ping()
-    {
-        $request = $this->createRequest('GET', '/ping');
-        $response = $this->sendRequest($request);
-
-        return $response;
     }
 
     private function createRequest(string $method, string $uri, $body = null): RequestInterface
