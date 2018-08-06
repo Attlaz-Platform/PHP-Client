@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Model\Exception\RequestException;
+use Attlaz\Model\LogEntry;
 use Attlaz\Model\ScheduleTaskResult;
 use League\OAuth2\Client\Provider\GenericProvider;
 use Psr\Http\Message\RequestInterface;
@@ -135,4 +136,20 @@ class Client
         return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
+    public function saveLog(LogEntry $logEntry): bool
+    {
+        $body = $logEntry;
+
+        $uri = '/system/logs';
+
+        $request = $this->createRequest('POST', $uri, $body);
+
+        $response = $this->sendRequest($request);
+
+        if (isset($response['_id']) && !empty($response['_id'])) {
+            return true;
+        }
+
+        return false;
+    }
 }
