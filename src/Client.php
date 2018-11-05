@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\LogEntry;
 use Attlaz\Model\ScheduleTaskResult;
 use League\OAuth2\Client\Provider\GenericProvider;
+use League\OAuth2\Client\Token\AccessToken;
 use Psr\Http\Message\RequestInterface;
 
 class Client
@@ -18,7 +20,9 @@ class Client
 
     private $accessToken;
 
-    public function __construct(string $endPoint, string $clientId, string $clientSecret)
+    private $storeToken = false;
+
+    public function __construct(string $endPoint, string $clientId, string $clientSecret, bool $storeToken = false)
     {
         if (empty($endPoint)) {
             throw new \InvalidArgumentException('Endpoint cannot be empty');
@@ -30,6 +34,7 @@ class Client
             throw new \InvalidArgumentException('ClientSecret secret cannot be empty');
         }
         $this->endPoint = $endPoint;
+        $this->storeToken = $storeToken;
 
         $this->provider = new GenericProvider([
             'clientId'                => $clientId,
@@ -41,17 +46,46 @@ class Client
             'base_uri'                => $endPoint,
             'timeout'                 => 20.0,
         ]);
-        $this->accessToken = $this->provider->getAccessToken('client_credentials', ['scope' => 'all']);
+        $this->authenticate($clientId, $clientSecret, $storeToken);
     }
 
-    public function enableDebug()
+    private function authenticate(string $clientId, string $clientSecret, bool $storeToken)
     {
-        $this->debug = true;
+        $accessToken = null;
+        if ($storeToken) {
+            $accessToken = TokenStorage::loadAccessToken($clientId, $clientSecret);
+        }
+
+        if (!\is_null($accessToken)) {
+            $this->accessToken = $accessToken;
+        } else {
+            $this->accessToken = $this->provider->getAccessToken('client_credentials', [
+                'scope' => 'all',
+            ]);
+            if ($storeToken) {
+                TokenStorage::saveAccessToken($this->accessToken, $clientId, $clientSecret);
+            }
+        }
     }
 
-    public function disableDebug()
+    public function setAccessToken(AccessToken $accessToken)
     {
-        $this->debug = false;
+        $this->accessToken = $accessToken;
+    }
+
+    private function createRequest(string $method, string $uri, $body = null): RequestInterface
+    {
+        $options = [];
+        if (!\is_null($body)) {
+            $body = \json_encode($body);
+            $options['body'] = $body;
+        }
+
+        $options['headers'] = ['Content-Type' => 'application/json'];
+
+        $url = $this->endPoint . $uri;
+
+        return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
     private function sendRequest(RequestInterface $request)
@@ -121,21 +155,6 @@ class Client
         return $result;
     }
 
-    private function createRequest(string $method, string $uri, $body = null): RequestInterface
-    {
-        $options = [];
-        if (!\is_null($body)) {
-            $body = \json_encode($body);
-            $options['body'] = $body;
-        }
-
-        $options['headers'] = ['Content-Type' => 'application/json'];
-
-        $url = $this->endPoint . $uri;
-
-        return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
-    }
-
     public function saveLog(LogEntry $logEntry): bool
     {
         $body = $logEntry;
@@ -152,4 +171,15 @@ class Client
 
         return false;
     }
+
+    public function enableDebug()
+    {
+        $this->debug = true;
+    }
+
+    public function disableDebug()
+    {
+        $this->debug = false;
+    }
+
 }
