@@ -43,9 +43,6 @@ class Client
         }
         $this->clientSecret = $clientSecret;
         $this->storeToken = $storeToken;
-
-        //TODO: postphone authentication until first request
-        $this->authenticate();
     }
 
     private function authenticate()
