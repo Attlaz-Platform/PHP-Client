@@ -14,56 +14,68 @@ use Psr\Http\Message\RequestInterface;
 class Client
 {
     private $endPoint;
+    private $clientId;
+    private $clientSecret;
+    private $storeToken = false;
+    private $timeout = 20;
 
     private $debug = false;
+
+    /** @var GenericProvider */
     private $provider;
 
     private $accessToken;
-
-    private $storeToken = false;
 
     public function __construct(string $endPoint, string $clientId, string $clientSecret, bool $storeToken = false)
     {
         if (empty($endPoint)) {
             throw new \InvalidArgumentException('Endpoint cannot be empty');
         }
+        $this->endPoint = rtrim($endPoint, '/');
+
         if (empty($clientId)) {
             throw new \InvalidArgumentException('ClientId cannot be empty');
         }
+        $this->clientId = $clientId;
+
         if (empty($clientSecret)) {
             throw new \InvalidArgumentException('ClientSecret secret cannot be empty');
         }
-        $this->endPoint = $endPoint;
+        $this->clientSecret = $clientSecret;
         $this->storeToken = $storeToken;
 
-        $this->provider = new GenericProvider([
-            'clientId'                => $clientId,
-            'clientSecret'            => $clientSecret,
-            'redirectUri'             => 'https://example.com/your-redirect-url/',
-            'urlAuthorize'            => $endPoint . '/oauth/authorize',
-            'urlAccessToken'          => $endPoint . '/oauth/token',
-            'urlResourceOwnerDetails' => $endPoint . '/oauth/resource',
-            'base_uri'                => $endPoint,
-            'timeout'                 => 20.0,
-        ]);
-        $this->authenticate($clientId, $clientSecret, $storeToken);
+        //TODO: postphone authentication until first request
+        $this->authenticate();
     }
 
-    private function authenticate(string $clientId, string $clientSecret, bool $storeToken)
+    private function authenticate()
     {
-        $accessToken = null;
-        if ($storeToken) {
-            $accessToken = TokenStorage::loadAccessToken($clientId, $clientSecret);
-        }
-
-        if (!\is_null($accessToken)) {
-            $this->accessToken = $accessToken;
-        } else {
-            $this->accessToken = $this->provider->getAccessToken('client_credentials', [
-                'scope' => 'all',
+        if (\is_null($this->accessToken)) {
+            $this->provider = new GenericProvider([
+                'clientId'                => $this->clientId,
+                'clientSecret'            => $this->clientSecret,
+                'redirectUri'             => 'https://attlaz.com/',
+                'urlAuthorize'            => $this->endPoint . '/oauth/authorize',
+                'urlAccessToken'          => $this->endPoint . '/oauth/token',
+                'urlResourceOwnerDetails' => $this->endPoint . '/oauth/resource',
+                'base_uri'                => $this->endPoint,
+                'timeout'                 => $this->timeout,
             ]);
-            if ($storeToken) {
-                TokenStorage::saveAccessToken($this->accessToken, $clientId, $clientSecret);
+
+            $accessToken = null;
+            if ($this->storeToken) {
+                $accessToken = TokenStorage::loadAccessToken($this->clientId, $this->clientSecret);
+            }
+
+            if (!\is_null($accessToken)) {
+                $this->accessToken = $accessToken;
+            } else {
+                $this->accessToken = $this->provider->getAccessToken('client_credentials', [
+                    'scope' => 'all',
+                ]);
+                if ($this->storeToken) {
+                    TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
+                }
             }
         }
     }
@@ -75,6 +87,10 @@ class Client
 
     private function createRequest(string $method, string $uri, $body = null): RequestInterface
     {
+        $this->authenticate();
+        if (\is_null($this->provider) || \is_null($this->accessToken)) {
+            throw new \Exception('Unable to create request: not authenticated');
+        }
         $options = [];
         if (!\is_null($body)) {
             $body = \json_encode($body);
@@ -110,7 +126,7 @@ class Client
             'arguments' => $arguments,
         ];
 
-        $uri = '/branches/' . $branch . '/taskexecutionrequest';
+        $uri = '/branches/' . $branch . '/taskexecutionrequests';
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -146,11 +162,19 @@ class Client
         //TODO: validate response & handle issues
         $success = ($response['success'] === true || $response['success'] === 'true');
 
-        $data = json_decode($response['result'], true);
-        $data = $data['data'];
-
         $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
-        $result->result = $data;
+
+        $resultData = null;
+        if (!\is_null($response['result'])) {
+            try {
+                $data = json_decode($response['result'], true);
+                $resultData = $data['data'];
+            } catch (\Error $error) {
+                throw new \Exception('Unable to parse task schedule response: ' . $error->getMessage());
+            }
+        }
+
+        $result->result = $resultData;
 
         return $result;
     }
