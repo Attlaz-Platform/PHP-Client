@@ -12,7 +12,6 @@ class LogEntry implements \JsonSerializable
     public $message;
     public $type;
     public $context = [];
-    public $extra = [];
 
     public function __construct(string $message, string $level)
     {
@@ -27,8 +26,7 @@ class LogEntry implements \JsonSerializable
             'level'   => $this->level,
             'type'    => $this->type,
             'message' => $this->message,
-            'context' => $this->context,
-            'extra'   => $this->extra,
+            'context' => $this->context
         ];
     }
 }
