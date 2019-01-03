@@ -193,6 +193,23 @@ class Client
         return false;
     }
 
+    public function createTaskExecution(string $taskId): string
+    {
+        $body = null;
+
+        $uri = '/tasks/' . $taskId . '/executions';
+
+        $request = $this->createRequest('POST', $uri, $body);
+
+        $response = $this->sendRequest($request);
+
+        if (isset($response['id']) && !empty($response['id'])) {
+            return $response['id'];
+        }
+
+        throw new \Exception('Unable to create task execution');
+    }
+
     public function enableDebug()
     {
         $this->debug = true;
