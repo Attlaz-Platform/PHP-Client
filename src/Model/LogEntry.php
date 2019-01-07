@@ -22,7 +22,7 @@ class LogEntry implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'date'    => $this->date->format(\DateTime::ATOM),
+            'date'    => $this->date->format(\DateTime::RFC3339_EXTENDED),
             'level'   => $this->level,
             'type'    => $this->type,
             'message' => $this->message,
