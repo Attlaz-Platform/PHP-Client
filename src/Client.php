@@ -210,6 +210,18 @@ class Client
         throw new \Exception('Unable to create task execution');
     }
 
+    public function getConfigByProject(string $projectId): array
+    {
+        $uri = '/projects/' . $projectId . '/config';
+
+        $request = $this->createRequest('GET', $uri);
+
+        $response = $this->sendRequest($request);
+
+        //TODO: parse configuration
+        return $response;
+    }
+
     public function enableDebug()
     {
         $this->debug = true;
