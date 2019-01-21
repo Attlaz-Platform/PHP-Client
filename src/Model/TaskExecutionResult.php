@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Model;
 
-class ScheduleTaskResult
+class TaskExecutionResult
 {
     private $success;
     private $id;

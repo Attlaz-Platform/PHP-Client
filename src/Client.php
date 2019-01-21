@@ -6,7 +6,7 @@ namespace Attlaz;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\LogEntry;
-use Attlaz\Model\ScheduleTaskResult;
+use Attlaz\Model\TaskExecutionResult;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use Psr\Http\Message\RequestInterface;
@@ -116,41 +116,45 @@ class Client
         return $jsonResponse;
     }
 
-    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
+    //    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
+    //    {
+    //        $body = [
+    //            'command'   => $command,
+    //            'arguments' => $arguments,
+    //        ];
+    //
+    //        $uri = '/branches/' . $branch . '/taskexecutionrequests';
+    //
+    //        $request = $this->createRequest('POST', $uri, $body);
+    //
+    //        $response = $this->sendRequest($request);
+    //
+    //        //TODO: validate response & handle issues
+    //        $success = ($response['success'] === true || $response['success'] === 'true');
+    //
+    //        $data = null;
+    //        if (isset($response['result']) && !empty($response['result'])) {
+    //            $data = json_decode($response['result'], true);
+    //            $data = $data['data'];
+    //        }
+    //
+    //        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+    //        $result->result = $data;
+    //
+    //        return $result;
+    //    }
+    public function scheduleProjectTask(string $projectKey, string $taskKey, array $arguments = []): TaskExecutionResult
     {
-        $body = [
-            'command'   => $command,
-            'arguments' => $arguments,
-        ];
-
-        $uri = '/branches/' . $branch . '/taskexecutionrequests';
-
-        $request = $this->createRequest('POST', $uri, $body);
-
-        $response = $this->sendRequest($request);
-
-        //TODO: validate response & handle issues
-        $success = ($response['success'] === true || $response['success'] === 'true');
-
-        $data = null;
-        if (isset($response['result']) && !empty($response['result'])) {
-            $data = json_decode($response['result'], true);
-            $data = $data['data'];
-        }
-
-        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
-        $result->result = $data;
-
-        return $result;
+        throw new \Exception('Not implemented');
     }
 
-    public function scheduleTask(string $task, array $arguments = []): ScheduleTaskResult
+    public function scheduleTask(string $taskId, array $arguments = []): TaskExecutionResult
     {
         $body = [
             'arguments' => $arguments,
         ];
 
-        $uri = '/tasks/' . $task . '/taskexecutionrequests';
+        $uri = '/tasks/' . $taskId . '/taskexecutionrequests';
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -159,13 +163,12 @@ class Client
         //TODO: validate response & handle issues
         $success = ($response['success'] === true || $response['success'] === 'true');
 
-        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+        $result = new TaskExecutionResult($success, $response['taskExecutionRequest']);
 
         $resultData = null;
         if (!\is_null($response['result'])) {
             try {
-                $data = json_decode($response['result'], true);
-                $resultData = $data['data'];
+                $resultData = $response['result']['data'];
             } catch (\Error $error) {
                 throw new \Exception('Unable to parse task schedule response: ' . $error->getMessage());
             }
