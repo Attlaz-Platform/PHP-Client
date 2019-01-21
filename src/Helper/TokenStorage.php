@@ -30,14 +30,12 @@ class TokenStorage
 
     private static function getData(string $clientId, string $clientSecret): array
     {
-        $data = [
+        return [
             'encrypt_method' => "AES-256-CBC",
             'key'            => hash('sha256', $clientId . '-' . $clientSecret),
             'iv'             => substr(hash('sha256', $clientSecret), 0, 16),
             'file'           => '_token_' . \hash('sha512', $clientId . $clientSecret),
         ];
-
-        return $data;
     }
 
     public static function saveAccessToken(AccessToken $accessToken, string $clientId, string $clientSecret)
