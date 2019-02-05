@@ -6,6 +6,8 @@ namespace Attlaz;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\LogEntry;
+use Attlaz\Model\Project;
+use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\TaskExecutionResult;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
@@ -213,9 +215,13 @@ class Client
         throw new \Exception('Unable to create task execution');
     }
 
-    public function getConfigByProject(string $projectId): array
+    public function getConfigByProject(string $projectId, int $projectEnvironmentId = null): array
     {
         $uri = '/projects/' . $projectId . '/config';
+
+        if (!\is_null($projectEnvironmentId)) {
+            $uri = $uri . '?environment=' . $projectEnvironmentId;
+        }
 
         $request = $this->createRequest('GET', $uri);
 
@@ -223,6 +229,47 @@ class Client
 
         //TODO: parse configuration
         return $response;
+    }
+
+    public function getProjectById(string $projectId): Project
+    {
+        $uri = '/projects';
+
+        $request = $this->createRequest('GET', $uri);
+
+        $rawProjects = $this->sendRequest($request);
+
+        foreach ($rawProjects as $rawProject) {
+            if ($rawProject['id'] === $projectId) {
+                $project = new Project();
+                $project->id = $rawProject['id'];
+                $project->key = $rawProject['key'];
+                $project->name = $rawProject['name'];
+                $project->state = $rawProject['state'];
+
+                return $project;
+            }
+        }
+        throw new \Exception('No project with id "' . $projectId . '" found');
+    }
+
+    public function getProjectEnvironmentById(int $projectEnvironmentId): ProjectEnvironment
+    {
+        $uri = '/projectenvironments/' . $projectEnvironmentId;
+
+        $request = $this->createRequest('GET', $uri);
+
+        //TODO: handle when environment is not found
+        $rawEnvironment = $this->sendRequest($request);
+
+        $projectEnvironment = new ProjectEnvironment();
+        $projectEnvironment->id = $rawEnvironment['id'];
+        $projectEnvironment->key = $rawEnvironment['key'];
+        $projectEnvironment->name = $rawEnvironment['name'];
+        $projectEnvironment->projectId = $rawEnvironment['projectId'];
+        $projectEnvironment->isLocal = $rawEnvironment['isLocal'];
+
+        return $projectEnvironment;
     }
 
     public function enableDebug()
