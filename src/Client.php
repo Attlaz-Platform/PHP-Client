@@ -198,11 +198,11 @@ class Client
         return false;
     }
 
-    public function createTaskExecution(string $taskId): string
+    public function createTaskExecution(string $taskId, int $projectEnvironmentId): string
     {
         $body = null;
 
-        $uri = '/tasks/' . $taskId . '/executions';
+        $uri = '/tasks/' . $taskId . '/executions?environment=' . $projectEnvironmentId;
 
         $request = $this->createRequest('POST', $uri, $body);
 
