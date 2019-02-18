@@ -262,6 +262,11 @@ class Client
         //TODO: handle when environment is not found
         $rawEnvironment = $this->sendRequest($request);
 
+        return $this->parseProjectEnvironment($rawEnvironment);
+    }
+
+    private function parseProjectEnvironment(array $rawEnvironment): ProjectEnvironment
+    {
         $projectEnvironment = new ProjectEnvironment();
         $projectEnvironment->id = $rawEnvironment['id'];
         $projectEnvironment->key = $rawEnvironment['key'];
@@ -270,6 +275,38 @@ class Client
         $projectEnvironment->isLocal = $rawEnvironment['isLocal'];
 
         return $projectEnvironment;
+    }
+
+    public function requestDeploy(int $projectEnvironmentId): int
+    {
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/deploy';
+
+        $request = $this->createRequest('POST', $uri);
+
+        $rawDeploy = $this->sendRequest($request);
+
+        if (!\is_null($rawDeploy) && isset($rawDeploy['id'])) {
+            return $rawDeploy['id'];
+        }
+        throw new \Exception('Something went wrong');
+    }
+
+    public function getProjectEnvironmentByKey(string $projectId, string $projectEnvironmentKey): ?ProjectEnvironment
+    {
+        $uri = '/projects/' . $projectId . '/environments';
+
+        $request = $this->createRequest('GET', $uri);
+
+        //TODO: handle when environment is not found
+        $rawEnvironments = $this->sendRequest($request);
+        foreach ($rawEnvironments as $rawEnvironment) {
+            $environment = $this->parseProjectEnvironment($rawEnvironment);
+            if ($environment->key === $projectEnvironmentKey) {
+                return $environment;
+            }
+        }
+
+        return null;
     }
 
     public function enableDebug()
