@@ -181,6 +181,17 @@ class Client
         return $result;
     }
 
+    public function getTasks(string $projectId): array
+    {
+        $uri = '/projects/' . $projectId . '/tasks';
+
+        $request = $this->createRequest('GET', $uri);
+
+        $response = $this->sendRequest($request);
+
+        var_dump($response);
+    }
+
     public function saveLog(LogEntry $logEntry): bool
     {
         $body = $logEntry;
@@ -291,7 +302,7 @@ class Client
         throw new \Exception('Something went wrong');
     }
 
-    public function getProjectEnvironmentByKey(string $projectId, string $projectEnvironmentKey): ?ProjectEnvironment
+    public function getProjectEnvironmentByKey(string $projectId, string $projectEnvironmentKey): ProjectEnvironment
     {
         $uri = '/projects/' . $projectId . '/environments';
 
@@ -306,7 +317,7 @@ class Client
             }
         }
 
-        return null;
+        throw new \Exception('No project environment with key "' . $projectEnvironmentKey . '" found');
     }
 
     public function enableDebug()
