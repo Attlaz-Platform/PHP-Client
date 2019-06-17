@@ -244,20 +244,10 @@ class Client
 
     public function getProjectById(string $projectId): Project
     {
-        $uri = '/projects';
+        $projects = $this->getProjects();
 
-        $request = $this->createRequest('GET', $uri);
-
-        $rawProjects = $this->sendRequest($request);
-
-        foreach ($rawProjects as $rawProject) {
-            if ($rawProject['id'] === $projectId) {
-                $project = new Project();
-                $project->id = $rawProject['id'];
-                $project->key = $rawProject['key'];
-                $project->name = $rawProject['name'];
-                $project->state = $rawProject['state'];
-
+        foreach ($projects as $project) {
+            if ($project->id === $projectId) {
                 return $project;
             }
         }
@@ -274,6 +264,17 @@ class Client
         $rawEnvironment = $this->sendRequest($request);
 
         return $this->parseProjectEnvironment($rawEnvironment);
+    }
+
+    private function parseProject(array $rawProject): Project
+    {
+        $project = new Project();
+        $project->id = $rawProject['id'];
+        $project->key = $rawProject['key'];
+        $project->name = $rawProject['name'];
+        $project->state = $rawProject['state'];
+
+        return $project;
     }
 
     private function parseProjectEnvironment(array $rawEnvironment): ProjectEnvironment
@@ -304,20 +305,56 @@ class Client
 
     public function getProjectEnvironmentByKey(string $projectId, string $projectEnvironmentKey): ProjectEnvironment
     {
-        $uri = '/projects/' . $projectId . '/environments';
-
-        $request = $this->createRequest('GET', $uri);
-
         //TODO: handle when environment is not found
-        $rawEnvironments = $this->sendRequest($request);
-        foreach ($rawEnvironments as $rawEnvironment) {
-            $environment = $this->parseProjectEnvironment($rawEnvironment);
-            if ($environment->key === $projectEnvironmentKey) {
-                return $environment;
+        $projectEnvironments = $this->getProjectEnvironments($projectId);
+        foreach ($projectEnvironments as $projectEnvironment) {
+            if ($projectEnvironment->key === $projectEnvironmentKey) {
+                return $projectEnvironment;
             }
         }
 
         throw new \Exception('No project environment with key "' . $projectEnvironmentKey . '" found');
+    }
+
+    /**
+     * @return Project[]
+     * @throws RequestException
+     */
+    public function getProjects(): array
+    {
+        $uri = '/projects/';
+
+        $projects = [];
+        $request = $this->createRequest('GET', $uri);
+
+        $rawProjects = $this->sendRequest($request);
+        foreach ($rawProjects as $rawProject) {
+            $project = $this->parseProject($rawProject);
+            $projects[] = $project;
+        }
+
+        return $projects;
+    }
+
+    /**
+     * @param string $projectId
+     * @return ProjectEnvironment[]
+     * @throws RequestException
+     */
+    public function getProjectEnvironments(string $projectId): array
+    {
+        $uri = '/projects/' . $projectId . '/environments';
+
+        $request = $this->createRequest('GET', $uri);
+
+        $projectEnvironments = [];
+        //TODO: handle when environment is not found
+        $rawEnvironments = $this->sendRequest($request);
+        foreach ($rawEnvironments as $rawEnvironment) {
+            $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
+        }
+
+        return $projectEnvironments;
     }
 
     public function enableDebug()
