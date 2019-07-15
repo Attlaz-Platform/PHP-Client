@@ -226,6 +226,20 @@ class Client
         throw new \Exception('Unable to create task execution');
     }
 
+    public function updateTaskExecution(string $taskExecutionId, string $status, int $time = null): void
+    {
+        $body = [
+            'status' => $status,
+            'time'   => $time,
+        ];
+
+        $uri = '/taskexecutions/' . $taskExecutionId . '';
+
+        $request = $this->createRequest('POST', $uri, $body);
+
+        $response = $this->sendRequest($request);
+    }
+
     public function getConfigByProject(string $projectId, int $projectEnvironmentId = null): array
     {
         $uri = '/projects/' . $projectId . '/config';
