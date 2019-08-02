@@ -286,6 +286,7 @@ class Client
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
+        $project->team = $rawProject['team'];
         $project->state = $rawProject['state'];
 
         return $project;
