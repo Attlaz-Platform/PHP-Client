@@ -8,5 +8,6 @@ class Project
     public $id;
     public $key;
     public $name;
+    public $team;
     public $state;
 }
