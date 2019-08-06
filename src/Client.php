@@ -150,11 +150,17 @@ class Client
         throw new \Exception('Not implemented');
     }
 
-    public function scheduleTask(string $taskId, array $arguments = []): TaskExecutionResult
-    {
+    public function requestTaskExecution(
+        string $taskId,
+        array $arguments = [],
+        int $projectEnvironmentId = null
+    ) {
         $body = [
             'arguments' => $arguments,
         ];
+        if (!\is_null($projectEnvironmentId)) {
+            $body['projectEnvironment'] = $projectEnvironmentId;
+        }
 
         $uri = '/tasks/' . $taskId . '/taskexecutionrequests';
 
@@ -179,6 +185,15 @@ class Client
         $result->result = $resultData;
 
         return $result;
+    }
+
+    /** @deprecated */
+    public function scheduleTask(
+        string $taskId,
+        array $arguments = [],
+        int $projectEnvironmentId = null
+    ): TaskExecutionResult {
+        return $this->requestTaskExecution($taskId, $arguments, $projectEnvironmentId);
     }
 
     public function getTasks(string $projectId): array
