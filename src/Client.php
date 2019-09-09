@@ -103,7 +103,7 @@ class Client
         return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
-    private function sendRequest(RequestInterface $request)
+    private function sendRequest(RequestInterface $request): array
     {
         try {
             $response = $this->provider->getHttpClient()
@@ -239,6 +239,17 @@ class Client
         }
 
         throw new \Exception('Unable to create task execution');
+    }
+
+    public function getTaskExecution(string $taskExecutionId): ?array
+    {
+        $uri = '/taskexecutions/' . $taskExecutionId . '/summaries';
+        //TODO: handle when no execution is found
+        $request = $this->createRequest('GET', $uri);
+
+        $response = $this->sendRequest($request);
+
+        return $response;
     }
 
     public function updateTaskExecution(string $taskExecutionId, string $status, int $time = null): void
