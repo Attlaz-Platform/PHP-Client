@@ -8,6 +8,7 @@ use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\LogEntry;
 use Attlaz\Model\Project;
 use Attlaz\Model\ProjectEnvironment;
+use Attlaz\Model\Task;
 use Attlaz\Model\TaskExecutionResult;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
@@ -196,15 +197,36 @@ class Client
         return $this->requestTaskExecution($taskId, $arguments, $projectEnvironmentId);
     }
 
+    /**
+     * @param string $projectId
+     * @return Task[]
+     * @throws RequestException
+     */
     public function getTasks(string $projectId): array
     {
         $uri = '/projects/' . $projectId . '/tasks';
 
         $request = $this->createRequest('GET', $uri);
 
-        $response = $this->sendRequest($request);
+        $rawTasks = $this->sendRequest($request);
 
-        var_dump($response);
+        $tasks = [];
+        if (!\is_null($rawTasks)) {
+            foreach ($rawTasks as $rawTask) {
+                $task = new Task();
+                $task->id = $rawTask['id'];
+                $task->key = $rawTask['key'];
+                $task->name = $rawTask['name'];
+                $task->description = $rawTask['description'];
+                $task->project = $rawTask['project'];
+                $task->state = $rawTask['state'];
+                $task->direct = $rawTask['direct'];
+
+                $tasks[] = $task;
+            }
+        }
+
+        return $tasks;
     }
 
     public function saveLog(LogEntry $logEntry): bool
