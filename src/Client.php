@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Helper\TokenStorage;
+use Attlaz\Model\Config;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\LogEntry;
 use Attlaz\Model\Project;
@@ -288,6 +289,12 @@ class Client
         $response = $this->sendRequest($request);
     }
 
+    /**
+     * @param string $projectId
+     * @param int|null $projectEnvironmentId
+     * @return Config[]
+     * @throws RequestException
+     */
     public function getConfigByProject(string $projectId, int $projectEnvironmentId = null): array
     {
         $uri = '/projects/' . $projectId . '/config';
@@ -298,10 +305,26 @@ class Client
 
         $request = $this->createRequest('GET', $uri);
 
-        $response = $this->sendRequest($request);
+        $rawConfigValues = $this->sendRequest($request);
+        $result = [];
 
-        //TODO: parse configuration
-        return $response;
+        if (!\is_null($rawConfigValues) && \is_iterable($rawConfigValues)) {
+            foreach ($rawConfigValues as $rawConfigValue) {
+                $configValue = new Config();
+                $configValue->id = $rawConfigValue['id'];
+                $configValue->inheritable = $rawConfigValue['inheritable'];
+                $configValue->sensitive = $rawConfigValue['sensitive'];
+                $configValue->state = $rawConfigValue['state'];
+                $configValue->project = $rawConfigValue['project'];
+                $configValue->projectEnvironment = $rawConfigValue['projectEnvironment'];
+                $configValue->key = $rawConfigValue['key'];
+                $configValue->value = $rawConfigValue['value'];
+
+                $result[] = $configValue;
+            }
+        }
+
+        return $result;
     }
 
     public function getProjectById(string $projectId): Project
