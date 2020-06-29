@@ -71,11 +71,15 @@ class Client
             if (!\is_null($accessToken)) {
                 $this->accessToken = $accessToken;
             } else {
-                $this->accessToken = $this->provider->getAccessToken('client_credentials', [
-                    'scope' => 'all',
-                ]);
-                if ($this->storeToken) {
-                    TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
+                try {
+                    $this->accessToken = $this->provider->getAccessToken('client_credentials', [
+                        'scope' => 'all',
+                    ]);
+                    if ($this->storeToken) {
+                        TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
+                    }
+                } catch (\Throwable $ex) {
+                    throw new \Exception('Unable to authenticate');
                 }
             }
         }
