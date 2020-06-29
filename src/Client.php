@@ -71,11 +71,15 @@ class Client
             if (!\is_null($accessToken)) {
                 $this->accessToken = $accessToken;
             } else {
-                $this->accessToken = $this->provider->getAccessToken('client_credentials', [
-                    'scope' => 'all',
-                ]);
-                if ($this->storeToken) {
-                    TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
+                try {
+                    $this->accessToken = $this->provider->getAccessToken('client_credentials', [
+                        'scope' => 'all',
+                    ]);
+                    if ($this->storeToken) {
+                        TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
+                    }
+                } catch (\Throwable $ex) {
+                    throw new \Exception('Unable to authenticate');
                 }
             }
         }
@@ -84,6 +88,11 @@ class Client
     public function setAccessToken(AccessToken $accessToken)
     {
         $this->accessToken = $accessToken;
+    }
+
+    public function setTimeout(int $timeout)
+    {
+        $this->timeout = $timeout;
     }
 
     private function createRequest(string $method, string $uri, $body = null): RequestInterface
@@ -230,7 +239,7 @@ class Client
         return $tasks;
     }
 
-    public function saveLog(LogEntry $logEntry): bool
+    public function saveLog(LogEntry $logEntry): ?string
     {
         $body = $logEntry;
 
@@ -240,11 +249,16 @@ class Client
 
         $response = $this->sendRequest($request);
 
-        if (isset($response['_id']) && !empty($response['_id'])) {
-            return true;
+        if (isset($response['id']) && !empty($response['id'])) {
+            return $response['id'];
         }
 
-        return false;
+        if (isset($response['_id']) && !empty($response['_id'])) {
+            return $response['_id'];
+        }
+
+        //TODO: should we throw an exception when we are unable to save the log
+        return null;
     }
 
     public function createTaskExecution(string $taskId, int $projectEnvironmentId): string
