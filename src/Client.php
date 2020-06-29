@@ -90,6 +90,11 @@ class Client
         $this->accessToken = $accessToken;
     }
 
+    public function setTimeout(int $timeout)
+    {
+        $this->timeout = $timeout;
+    }
+
     private function createRequest(string $method, string $uri, $body = null): RequestInterface
     {
         $this->authenticate();
