@@ -230,7 +230,7 @@ class Client
         return $tasks;
     }
 
-    public function saveLog(LogEntry $logEntry): bool
+    public function saveLog(LogEntry $logEntry): ?string
     {
         $body = $logEntry;
 
@@ -240,11 +240,16 @@ class Client
 
         $response = $this->sendRequest($request);
 
-        if (isset($response['_id']) && !empty($response['_id'])) {
-            return true;
+        if (isset($response['id']) && !empty($response['id'])) {
+            return $response['id'];
         }
 
-        return false;
+        if (isset($response['_id']) && !empty($response['_id'])) {
+            return $response['_id'];
+        }
+
+        //TODO: should we throw an exception when we are unable to save the log
+        return null;
     }
 
     public function createTaskExecution(string $taskId, int $projectEnvironmentId): string
