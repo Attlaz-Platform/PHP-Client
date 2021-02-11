@@ -17,7 +17,7 @@ use Psr\Http\Message\RequestInterface;
 
 class Client
 {
-    private $endPoint;
+    private $endPoint = 'https://api.attlaz.com';
     private $clientId;
     private $clientSecret;
     private $storeToken = false;
@@ -30,13 +30,8 @@ class Client
 
     private $accessToken;
 
-    public function __construct(string $endPoint, string $clientId, string $clientSecret, bool $storeToken = false)
+    public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
-        if (empty($endPoint)) {
-            throw new \InvalidArgumentException('Endpoint cannot be empty');
-        }
-        $this->endPoint = rtrim($endPoint, '/');
-
         if (empty($clientId)) {
             throw new \InvalidArgumentException('ClientId cannot be empty');
         }
@@ -49,39 +44,44 @@ class Client
         $this->storeToken = $storeToken;
     }
 
+    public function setEndPoint(string $endPoint): void
+    {
+        $this->endPoint = $endPoint;
+    }
+
     private function authenticate()
     {
-        if (\is_null($this->accessToken)) {
-            $this->provider = new GenericProvider([
-                'clientId'                => $this->clientId,
-                'clientSecret'            => $this->clientSecret,
-                'redirectUri'             => 'https://attlaz.com/',
-                'urlAuthorize'            => $this->endPoint . '/oauth/authorize',
-                'urlAccessToken'          => $this->endPoint . '/oauth/token',
-                'urlResourceOwnerDetails' => $this->endPoint . '/oauth/resource',
-                'base_uri'                => $this->endPoint,
-                'timeout'                 => $this->timeout,
-            ]);
+        try {
+            if (\is_null($this->accessToken)) {
+                $this->provider = new GenericProvider([
+                    'clientId' => $this->clientId,
+                    'clientSecret' => $this->clientSecret,
+                    'redirectUri' => 'https://attlaz.com/',
+                    'urlAuthorize' => $this->endPoint . '/oauth/authorize',
+                    'urlAccessToken' => $this->endPoint . '/oauth/token',
+                    'urlResourceOwnerDetails' => $this->endPoint . '/oauth/resource',
+                    'base_uri' => $this->endPoint,
+                    'timeout' => $this->timeout,
+                ]);
 
-            $accessToken = null;
-            if ($this->storeToken) {
-                $accessToken = TokenStorage::loadAccessToken($this->clientId, $this->clientSecret);
-            }
+                $accessToken = null;
+                if ($this->storeToken) {
+                    $accessToken = TokenStorage::loadAccessToken($this->clientId, $this->clientSecret);
+                }
 
-            if (!\is_null($accessToken)) {
-                $this->accessToken = $accessToken;
-            } else {
-                try {
+                if (!\is_null($accessToken)) {
+                    $this->accessToken = $accessToken;
+                } else {
                     $this->accessToken = $this->provider->getAccessToken('client_credentials', [
                         'scope' => 'all',
                     ]);
                     if ($this->storeToken) {
                         TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
                     }
-                } catch (\Throwable $ex) {
-                    throw new \Exception('Unable to authenticate');
                 }
             }
+        } catch (\Throwable $ex) {
+            throw new \Exception('Unable to authenticate');
         }
     }
 
@@ -118,10 +118,10 @@ class Client
     {
         try {
             $response = $this->provider->getHttpClient()
-                                       ->send($request, ['debug' => $this->debug]);
+                ->send($request, ['debug' => $this->debug]);
 
             $jsonResponse = \json_decode($response->getBody()
-                                                  ->getContents(), true);
+                ->getContents(), true);
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
         }
@@ -165,7 +165,8 @@ class Client
         string $taskId,
         array $arguments = [],
         int $projectEnvironmentId = null
-    ) {
+    )
+    {
         $body = [
             'arguments' => $arguments,
         ];
@@ -203,7 +204,8 @@ class Client
         string $taskId,
         array $arguments = [],
         int $projectEnvironmentId = null
-    ): TaskExecutionResult {
+    ): TaskExecutionResult
+    {
         return $this->requestTaskExecution($taskId, $arguments, $projectEnvironmentId);
     }
 
@@ -293,7 +295,7 @@ class Client
     {
         $body = [
             'status' => $status,
-            'time'   => $time,
+            'time' => $time,
         ];
 
         $uri = '/taskexecutions/' . $taskExecutionId . '';
@@ -455,6 +457,30 @@ class Client
         }
 
         return $projectEnvironments;
+    }
+
+    /**
+     * @param string $projectId
+     * @return array[]
+     * @throws RequestException
+     */
+    public function getConnections(string $projectId): array
+    {
+        $uri = '/connections?projectId=' . $projectId;
+
+        $request = $this->createRequest('GET', $uri);
+
+//        $connections = [];
+
+        $response = $this->sendRequest($request);
+        $rawConnections = $response['data'];
+//        foreach ($rawEnvironments as $rawEnvironment) {
+//            $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
+//        }
+//
+//        return $projectEnvironments;
+
+        return $rawConnections;
     }
 
     public function enableDebug()
