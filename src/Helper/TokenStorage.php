@@ -7,7 +7,7 @@ use League\OAuth2\Client\Token\AccessToken;
 
 class TokenStorage
 {
-    public static function loadAccessToken(string $clientId, string $clientSecret)
+    public static function loadAccessToken(string $clientId, string $clientSecret): ?AccessToken
     {
         $data = self::getData($clientId, $clientSecret);
 
@@ -22,6 +22,13 @@ class TokenStorage
 
             if (!is_null($accessToken) && is_a($accessToken, AccessToken::class) && !$accessToken->hasExpired()) {
                 return $accessToken;
+            } else {
+
+                try {
+                    \unlink($file);
+                } catch (\Throwable $ex) {
+
+                }
             }
         }
 

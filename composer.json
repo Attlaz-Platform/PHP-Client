@@ -6,9 +6,12 @@
     "OSL-3.0",
     "AFL-3.0"
   ],
+  "keywords": [
+    "attlaz"
+  ],
   "require": {
     "php": ">=7.2 | >=8.0",
-    "league/oauth2-client": "2.3.*",
+    "league/oauth2-client": "^2.6.0",
     "psr/log": "1.*",
     "ext-json": "*",
     "ext-openssl": "*"
