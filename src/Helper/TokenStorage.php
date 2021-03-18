@@ -7,7 +7,7 @@ use League\OAuth2\Client\Token\AccessToken;
 
 class TokenStorage
 {
-    public static function loadAccessToken(string $clientId, string $clientSecret)
+    public static function loadAccessToken(string $clientId, string $clientSecret): ?AccessToken
     {
         $data = self::getData($clientId, $clientSecret);
 

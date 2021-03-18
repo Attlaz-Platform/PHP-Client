@@ -11,6 +11,7 @@ use Attlaz\Model\Project;
 use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\Task;
 use Attlaz\Model\TaskExecutionResult;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use Psr\Http\Message\RequestInterface;
@@ -25,9 +26,10 @@ class Client
 
     private $debug = false;
 
-    /** @var GenericProvider */
+    /** @var GenericProvider|null */
     private $provider;
 
+    /** @var AccessToken|null */
     private $accessToken;
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
@@ -46,22 +48,27 @@ class Client
 
     public function setEndPoint(string $endPoint): void
     {
-        $this->endPoint = $endPoint;
+        if ($endPoint === '') {
+            throw new \InvalidArgumentException('Endpoint cannot be empty');
+        }
+        $this->endPoint = rtrim($endPoint, "/");
     }
 
     private function authenticate()
     {
+
+
         try {
-            if (\is_null($this->accessToken)) {
+            if (\is_null($this->accessToken) || $this->accessToken->hasExpired()) {
                 $this->provider = new GenericProvider([
-                    'clientId' => $this->clientId,
-                    'clientSecret' => $this->clientSecret,
-                    'redirectUri' => 'https://attlaz.com/',
-                    'urlAuthorize' => $this->endPoint . '/oauth/authorize',
-                    'urlAccessToken' => $this->endPoint . '/oauth/token',
+                    'clientId'                => $this->clientId,
+                    'clientSecret'            => $this->clientSecret,
+                    'redirectUri'             => 'https://attlaz.com/',
+                    'urlAuthorize'            => $this->endPoint . '/oauth/authorize',
+                    'urlAccessToken'          => $this->endPoint . '/oauth/token',
                     'urlResourceOwnerDetails' => $this->endPoint . '/oauth/resource',
-                    'base_uri' => $this->endPoint,
-                    'timeout' => $this->timeout,
+                    'base_uri'                => $this->endPoint,
+                    'timeout'                 => $this->timeout,
                 ]);
 
                 $accessToken = null;
@@ -80,9 +87,19 @@ class Client
                     }
                 }
             }
+        } catch (IdentityProviderException $ex) {
+            throw new \Exception('Unable to authenticate: ' . $ex->getMessage());
         } catch (\Throwable $ex) {
+            if ($this->debug) {
+                \var_dump($ex);
+            }
             throw new \Exception('Unable to authenticate');
         }
+    }
+
+    public function getAccessToken(): ?AccessToken
+    {
+        return $this->accessToken;
     }
 
     public function setAccessToken(AccessToken $accessToken)
@@ -295,7 +312,7 @@ class Client
     {
         $body = [
             'status' => $status,
-            'time' => $time,
+            'time'   => $time,
         ];
 
         $uri = '/taskexecutions/' . $taskExecutionId . '';
@@ -393,7 +410,7 @@ class Client
 
     public function requestDeploy(int $projectEnvironmentId): int
     {
-        $uri = '/projectenvironments/' . $projectEnvironmentId . '/deploy';
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/deploys';
 
         $request = $this->createRequest('POST', $uri);
 
@@ -492,5 +509,6 @@ class Client
     {
         $this->debug = false;
     }
+
 
 }
