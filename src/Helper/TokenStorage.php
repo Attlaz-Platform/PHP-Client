@@ -22,6 +22,13 @@ class TokenStorage
 
             if (!is_null($accessToken) && is_a($accessToken, AccessToken::class) && !$accessToken->hasExpired()) {
                 return $accessToken;
+            } else {
+
+                try {
+                    \unlink($file);
+                } catch (\Throwable $ex) {
+
+                }
             }
         }
 
