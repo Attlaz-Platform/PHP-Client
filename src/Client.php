@@ -181,7 +181,7 @@ class Client
     public function requestTaskExecution(
         string $taskId,
         array $arguments = [],
-        int $projectEnvironmentId = null
+        string $projectEnvironmentId = null
     )
     {
         $body = [
@@ -220,7 +220,7 @@ class Client
     public function scheduleTask(
         string $taskId,
         array $arguments = [],
-        int $projectEnvironmentId = null
+        string $projectEnvironmentId = null
     ): TaskExecutionResult
     {
         return $this->requestTaskExecution($taskId, $arguments, $projectEnvironmentId);
@@ -280,7 +280,7 @@ class Client
         return null;
     }
 
-    public function createTaskExecution(string $taskId, int $projectEnvironmentId): string
+    public function createTaskExecution(string $taskId, string $projectEnvironmentId): string
     {
         $body = null;
 
@@ -328,7 +328,7 @@ class Client
      * @return Config[]
      * @throws RequestException
      */
-    public function getConfigByProject(string $projectId, int $projectEnvironmentId = null): array
+    public function getConfigByProject(string $projectId, string $projectEnvironmentId = null): array
     {
         $uri = '/projects/' . $projectId . '/config';
 
@@ -372,7 +372,7 @@ class Client
         throw new \Exception('No project with id "' . $projectId . '" found');
     }
 
-    public function getProjectEnvironmentById(int $projectEnvironmentId): ProjectEnvironment
+    public function getProjectEnvironmentById(string $projectEnvironmentId): ProjectEnvironment
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId;
 
@@ -408,7 +408,7 @@ class Client
         return $projectEnvironment;
     }
 
-    public function requestDeploy(int $projectEnvironmentId): int
+    public function requestDeploy(string $projectEnvironmentId): int
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/deploys';
 
