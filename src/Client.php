@@ -349,7 +349,7 @@ class Client
                 $configValue->sensitive = $rawConfigValue['sensitive'];
                 $configValue->state = $rawConfigValue['state'];
                 $configValue->project = $rawConfigValue['project'];
-                $configValue->projectEnvironment = $rawConfigValue['projectEnvironment'];
+                $configValue->projectEnvironment = (string)$rawConfigValue['projectEnvironment'];
                 $configValue->key = $rawConfigValue['key'];
                 $configValue->value = $rawConfigValue['value'];
 
@@ -399,7 +399,7 @@ class Client
     private function parseProjectEnvironment(array $rawEnvironment): ProjectEnvironment
     {
         $projectEnvironment = new ProjectEnvironment();
-        $projectEnvironment->id = $rawEnvironment['id'];
+        $projectEnvironment->id = (string)$rawEnvironment['id'];
         $projectEnvironment->key = $rawEnvironment['key'];
         $projectEnvironment->name = $rawEnvironment['name'];
         $projectEnvironment->projectId = $rawEnvironment['projectId'];
