@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Config;
 use Attlaz\Model\Exception\RequestException;
@@ -18,19 +19,18 @@ use Psr\Http\Message\RequestInterface;
 
 class Client
 {
-    private $endPoint = 'https://api.attlaz.com';
-    private $clientId;
-    private $clientSecret;
-    private $storeToken = false;
-    private $timeout = 20;
+    private string $endPoint = 'https://api.attlaz.com';
+    private string $clientId;
+    private string $clientSecret;
+    private bool $storeToken = false;
+    private int $timeout = 20;
 
-    private $debug = false;
+    private bool $debug = false;
 
-    /** @var GenericProvider|null */
-    private $provider;
+    private ?GenericProvider $provider;
+    private ?AccessToken $accessToken;
 
-    /** @var AccessToken|null */
-    private $accessToken;
+    private StorageEndpoint $storageEndpoint;
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
@@ -44,6 +44,8 @@ class Client
         }
         $this->clientSecret = $clientSecret;
         $this->storeToken = $storeToken;
+
+        $this->storageEndpoint = new StorageEndpoint($this);
     }
 
     public function setEndPoint(string $endPoint): void
@@ -93,6 +95,7 @@ class Client
             if ($this->debug) {
                 \var_dump($ex);
             }
+//            \var_dump($ex);
             throw new \Exception('Unable to authenticate');
         }
     }
@@ -112,7 +115,7 @@ class Client
         $this->timeout = $timeout;
     }
 
-    private function createRequest(string $method, string $uri, $body = null): RequestInterface
+    public function createRequest(string $method, string $uri, $body = null): RequestInterface
     {
         $this->authenticate();
         if (\is_null($this->provider) || \is_null($this->accessToken)) {
@@ -131,7 +134,7 @@ class Client
         return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
-    private function sendRequest(RequestInterface $request): array
+    public function sendRequest(RequestInterface $request): array
     {
         try {
             $response = $this->provider->getHttpClient()
@@ -139,6 +142,7 @@ class Client
 
             $jsonResponse = \json_decode($response->getBody()
                 ->getContents(), true);
+
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
         }
@@ -180,7 +184,7 @@ class Client
 
     public function requestTaskExecution(
         string $taskId,
-        array $arguments = [],
+        array  $arguments = [],
         string $projectEnvironmentId = null
     )
     {
@@ -219,7 +223,7 @@ class Client
     /** @deprecated */
     public function scheduleTask(
         string $taskId,
-        array $arguments = [],
+        array  $arguments = [],
         string $projectEnvironmentId = null
     ): TaskExecutionResult
     {
@@ -386,11 +390,13 @@ class Client
 
     private function parseProject(array $rawProject): Project
     {
+
         $project = new Project();
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
         $project->team = $rawProject['team'];
+        $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
         $project->state = $rawProject['state'];
 
         return $project;
@@ -510,5 +516,9 @@ class Client
         $this->debug = false;
     }
 
+    public function getStorageEndpoint(): StorageEndpoint
+    {
+        return $this->storageEndpoint;
+    }
 
 }

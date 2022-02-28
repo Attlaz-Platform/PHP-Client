@@ -5,14 +5,10 @@ namespace Attlaz\Model;
 
 class ProjectEnvironment
 {
-    /** @var string $id */
-    public $id;
-    /** @var string $key */
-    public $key;
-    /** @var string $name */
-    public $name;
-    /** @var string $projectId */
-    public $projectId;
-    /** @var bool $isLocal */
-    public $isLocal;
+
+    public string $id;
+    public string $key;
+    public string $name;
+    public string $projectId;
+    public bool $isLocal;
 }
