@@ -6,10 +6,10 @@ namespace Attlaz\Model;
 class LogEntry implements \JsonSerializable
 {
     public ?string $id;
-    public LogStreamId $logStreamId;
-    public \DateTimeInterface $date;
-    public string $level;
-    public string $message;
+    private LogStreamId $logStreamId;
+    private \DateTimeInterface $date;
+    private string $level;
+    private string $message;
     public array $context = [];
     public array $tags = [];
 
@@ -24,6 +24,11 @@ class LogEntry implements \JsonSerializable
     public function getLogStreamId(): LogStreamId
     {
         return $this->logStreamId;
+    }
+
+    public function getDate(): \DateTimeInterface
+    {
+        return $this->date;
     }
 
     public function jsonSerialize(): array

@@ -501,5 +501,8 @@ class Client
     {
         return $this->storageEndpoint;
     }
-
+    public function getLogEndpoint(): LogEndpoint
+    {
+        return $this->logEndpoint;
+    }
 }
