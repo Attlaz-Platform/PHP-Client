@@ -6,8 +6,7 @@ namespace Attlaz\Model;
 class LogEntry implements \JsonSerializable
 {
     public $id;
-    /** @var \DateTime */
-    public $date;
+    public \DateTimeInterface $date;
     public $level;
     public $message;
     public $type;

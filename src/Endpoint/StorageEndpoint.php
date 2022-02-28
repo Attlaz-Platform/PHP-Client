@@ -8,8 +8,6 @@ use Attlaz\Model\StorageItem;
 
 class StorageEndpoint
 {
-    private array $data = [];
-
     private Client $client;
 
     public function __construct(Client $client)
@@ -42,12 +40,12 @@ class StorageEndpoint
         return null;
     }
 
-    public function hasValue(string $key, ?string $pool = null): bool
+    public function hasValue(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $pool = null): bool
     {
-        return isset($this->data[$key]);
+        return $this->getValue($projectEnvironmentId, $storageType, $storageItemKey, $pool) !== null;
     }
 
-    public function setValue(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $pool = null):bool
+    public function setValue(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $pool = null): bool
     {
         // TODO: how to handle overrides?
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
@@ -59,22 +57,22 @@ class StorageEndpoint
         return $rawResult['data']['succes'];
     }
 
-    public function getKeys(?string $pool = null): array
+    public function getKeys(string $projectEnvironmentId, string $storageType, ?string $pool = null): array
     {
-        return \array_keys($this->data);
+        throw new \Exception('Not implemented');
     }
 
-    public function delValue(string $key, ?string $pool = null): bool
+    public function delValue(string $projectEnvironmentId, string $storageType, string $key, ?string $pool = null): bool
     {
-        unset($this->data[$key]);
-        return true;
+        throw new \Exception('Not implemented');
     }
 
-    public function delValues(array $keys, ?string $pool = null): array
+    public function delValues(string $projectEnvironmentId, string $storageType, array $keys, ?string $pool = null): array
     {
+        $result = [];
         foreach ($keys as $key) {
-            unset($this->data[$key]);
+            $result[$key] = $this->delValue($projectEnvironmentId, $storageType, $key, $pool);
         }
-        return [true];
+        return $result;
     }
 }

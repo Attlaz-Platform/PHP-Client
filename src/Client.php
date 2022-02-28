@@ -19,19 +19,16 @@ use Psr\Http\Message\RequestInterface;
 
 class Client
 {
-    private $endPoint = 'https://api.attlaz.com';
-    private $clientId;
-    private $clientSecret;
-    private $storeToken = false;
-    private $timeout = 20;
+    private string $endPoint = 'https://api.attlaz.com';
+    private string $clientId;
+    private string $clientSecret;
+    private bool $storeToken = false;
+    private int $timeout = 20;
 
-    private $debug = false;
+    private bool $debug = false;
 
-    /** @var GenericProvider|null */
-    private $provider;
-
-    /** @var AccessToken|null */
-    private $accessToken;
+    private ?GenericProvider $provider;
+    private ?AccessToken $accessToken;
 
     private StorageEndpoint $storageEndpoint;
 
@@ -98,6 +95,7 @@ class Client
             if ($this->debug) {
                 \var_dump($ex);
             }
+//            \var_dump($ex);
             throw new \Exception('Unable to authenticate');
         }
     }
@@ -144,6 +142,7 @@ class Client
 
             $jsonResponse = \json_decode($response->getBody()
                 ->getContents(), true);
+
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
         }
@@ -185,7 +184,7 @@ class Client
 
     public function requestTaskExecution(
         string $taskId,
-        array $arguments = [],
+        array  $arguments = [],
         string $projectEnvironmentId = null
     )
     {
@@ -224,7 +223,7 @@ class Client
     /** @deprecated */
     public function scheduleTask(
         string $taskId,
-        array $arguments = [],
+        array  $arguments = [],
         string $projectEnvironmentId = null
     ): TaskExecutionResult
     {
@@ -391,11 +390,13 @@ class Client
 
     private function parseProject(array $rawProject): Project
     {
+
         $project = new Project();
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
         $project->team = $rawProject['team'];
+        $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
         $project->state = $rawProject['state'];
 
         return $project;
