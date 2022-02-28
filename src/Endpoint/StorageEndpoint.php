@@ -15,7 +15,7 @@ class StorageEndpoint
         $this->client = $client;
     }
 
-    public function getValue(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $pool = null): ?StorageItem
+    public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $pool = null): ?StorageItem
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
 
@@ -40,12 +40,12 @@ class StorageEndpoint
         return null;
     }
 
-    public function hasValue(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $pool = null): bool
+    public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $pool = null): bool
     {
-        return $this->getValue($projectEnvironmentId, $storageType, $storageItemKey, $pool) !== null;
+        return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $pool) !== null;
     }
 
-    public function setValue(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $pool = null): bool
+    public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $pool = null): bool
     {
         // TODO: how to handle overrides?
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
@@ -54,25 +54,91 @@ class StorageEndpoint
 
         $rawResult = $this->client->sendRequest($request);
 //        \var_dump($rawResult['data']['succes']);
-        return $rawResult['data']['succes'];
+        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
+            return $rawItem['data']['success'];
+        }
+        throw new \Exception('Invalid response');
     }
 
-    public function getKeys(string $projectEnvironmentId, string $storageType, ?string $pool = null): array
+    /**
+     * @return string[]
+     */
+    public function getItemKeys(string $projectEnvironmentId, string $storageType, ?string $pool = null): array
     {
-        throw new \Exception('Not implemented');
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items';
+
+        $request = $this->client->createRequest('GET', $uri);
+
+        $rawItem = $this->client->sendRequest($request);
+
+        if (isset($rawItem['data']) && isset($rawItem['data']['item_keys'])) {
+            return $rawItem['data']['item_keys'];
+
+        }
+
+        throw new \Exception('Invalid response');
     }
 
-    public function delValue(string $projectEnvironmentId, string $storageType, string $key, ?string $pool = null): bool
+    public function deleteItem(string $projectEnvironmentId, string $storageType, string $key, ?string $pool = null): bool
     {
-        throw new \Exception('Not implemented');
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $key;
+
+        $request = $this->client->createRequest('DELETE', $uri);
+
+        $rawItem = $this->client->sendRequest($request);
+
+        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
+            return $rawItem['data']['success'];
+        }
+
+        throw new \Exception('Invalid response');
     }
 
-    public function delValues(string $projectEnvironmentId, string $storageType, array $keys, ?string $pool = null): array
+    public function deleteItems(string $projectEnvironmentId, string $storageType, array $keys, ?string $pool = null): array
     {
         $result = [];
         foreach ($keys as $key) {
-            $result[$key] = $this->delValue($projectEnvironmentId, $storageType, $key, $pool);
+            $result[$key] = $this->deleteItem($projectEnvironmentId, $storageType, $key, $pool);
         }
         return $result;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getPoolKeys(string $projectEnvironmentId, string $storageType): array
+    {
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items';
+
+        $request = $this->client->createRequest('GET', $uri);
+
+        $rawItem = $this->client->sendRequest($request);
+
+        if (isset($rawItem['data']) && isset($rawItem['data']['pools'])) {
+            $rawPools = $rawItem['data']['pools'];
+            $result = [];
+            foreach ($rawPools as $rawPool) {
+                $result[] = $rawPool['name'];
+            }
+            return $result;
+
+        }
+
+        throw new \Exception('Invalid response');
+    }
+
+    public function clearPool(string $projectEnvironmentId, string $storageType, string $pool): bool
+    {
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
+
+        $request = $this->client->createRequest('DELETE', $uri);
+
+        $rawItem = $this->client->sendRequest($request);
+
+        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
+            return $rawItem['data']['success'];
+        }
+
+        throw new \Exception('Invalid response');
     }
 }
