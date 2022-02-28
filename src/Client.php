@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Config;
 use Attlaz\Model\Exception\RequestException;
@@ -32,6 +33,8 @@ class Client
     /** @var AccessToken|null */
     private $accessToken;
 
+    private StorageEndpoint $storageEndpoint;
+
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
         if (empty($clientId)) {
@@ -44,6 +47,8 @@ class Client
         }
         $this->clientSecret = $clientSecret;
         $this->storeToken = $storeToken;
+
+        $this->storageEndpoint = new StorageEndpoint($this);
     }
 
     public function setEndPoint(string $endPoint): void
@@ -112,7 +117,7 @@ class Client
         $this->timeout = $timeout;
     }
 
-    private function createRequest(string $method, string $uri, $body = null): RequestInterface
+    public function createRequest(string $method, string $uri, $body = null): RequestInterface
     {
         $this->authenticate();
         if (\is_null($this->provider) || \is_null($this->accessToken)) {
@@ -131,7 +136,7 @@ class Client
         return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
-    private function sendRequest(RequestInterface $request): array
+    public function sendRequest(RequestInterface $request): array
     {
         try {
             $response = $this->provider->getHttpClient()
@@ -510,5 +515,9 @@ class Client
         $this->debug = false;
     }
 
+    public function getStorageEndpoint(): StorageEndpoint
+    {
+        return $this->storageEndpoint;
+    }
 
 }
