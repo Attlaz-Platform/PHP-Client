@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Endpoint\LogEndpoint;
 use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Config;
@@ -27,10 +28,11 @@ class Client
 
     private bool $debug = false;
 
-    private ?GenericProvider $provider;
-    private ?AccessToken $accessToken;
+    private ?GenericProvider $provider = null;
+    private ?AccessToken $accessToken = null;
 
     private StorageEndpoint $storageEndpoint;
+    private LogEndpoint $logEndpoint;
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
@@ -46,6 +48,7 @@ class Client
         $this->storeToken = $storeToken;
 
         $this->storageEndpoint = new StorageEndpoint($this);
+        $this->logEndpoint = new LogEndpoint($this);
     }
 
     public function setEndPoint(string $endPoint): void
@@ -260,28 +263,6 @@ class Client
         }
 
         return $tasks;
-    }
-
-    public function saveLog(LogEntry $logEntry): ?string
-    {
-        $body = $logEntry;
-
-        $uri = '/system/logs';
-
-        $request = $this->createRequest('POST', $uri, $body);
-
-        $response = $this->sendRequest($request);
-
-        if (isset($response['id']) && !empty($response['id'])) {
-            return $response['id'];
-        }
-
-        if (isset($response['_id']) && !empty($response['_id'])) {
-            return $response['_id'];
-        }
-
-        //TODO: should we throw an exception when we are unable to save the log
-        return null;
     }
 
     public function createTaskExecution(string $taskId, string $projectEnvironmentId): string
@@ -520,5 +501,8 @@ class Client
     {
         return $this->storageEndpoint;
     }
-
+    public function getLogEndpoint(): LogEndpoint
+    {
+        return $this->logEndpoint;
+    }
 }
