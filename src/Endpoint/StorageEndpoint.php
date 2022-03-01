@@ -53,9 +53,9 @@ class StorageEndpoint
         $request = $this->client->createRequest('POST', $uri, ['storage_item' => $storageItem]);
 
         $rawResult = $this->client->sendRequest($request);
-//        \var_dump($rawResult['data']['succes']);
-        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
-            return $rawItem['data']['success'];
+
+        if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
+            return $rawResult['data']['success'];
         }
         throw new \Exception('Invalid response');
     }
