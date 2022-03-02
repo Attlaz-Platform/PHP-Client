@@ -29,7 +29,8 @@ class StorageEndpoint
 
             $item = new StorageItem();
             $item->key = $rawItem['key'];
-            $item->value = $rawItem['value'];
+            $item->value = $this->thawValue($rawItem['value']);
+
             if ($rawItem['expiration'] !== null) {
                 $rawItem['expiration'] = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
             }
@@ -45,10 +46,22 @@ class StorageEndpoint
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $pool) !== null;
     }
 
+    private function freezeValue($value): string
+    {
+        return \json_encode($value);
+    }
+
+    public function thawValue(string $input)
+    {
+        return \json_decode($input, true);
+    }
+
     public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $pool = null): bool
     {
         // TODO: how to handle overrides?
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
+
+        $storageItem->value = $this->freezeValue($storageItem->value);
 
         $request = $this->client->createRequest('POST', $uri, ['storage_item' => $storageItem]);
 
