@@ -95,6 +95,9 @@ class StorageEndpoint
         if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
             return $rawResult['data']['success'];
         }
+        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
+            return false;
+        }
         throw new \Exception('Invalid response');
     }
 
@@ -136,7 +139,9 @@ class StorageEndpoint
         if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
             return $rawItem['data']['success'];
         }
-
+        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
+            return false;
+        }
         throw new \Exception('Invalid response');
     }
 
@@ -188,7 +193,9 @@ class StorageEndpoint
         if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
             return $rawItem['data']['success'];
         }
-
+        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
+            return false;
+        }
         throw new \Exception('Invalid response');
     }
 }
