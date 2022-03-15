@@ -5,13 +5,13 @@ namespace Attlaz\Model;
 
 class LogEntry implements \JsonSerializable
 {
-    public ?string $id;
-    private LogStreamId $logStreamId;
-    private \DateTimeInterface $date;
-    private string $level;
-    private string $message;
-    public array $context = [];
-    public array $tags = [];
+    public $id;
+    private $logStreamId;
+    private $date;
+    private $level;
+    private $message;
+    public $context = [];
+    public $tags = [];
 
     public function __construct(LogStreamId $logStreamId, string $message, string $level, \DateTimeInterface $date)
     {

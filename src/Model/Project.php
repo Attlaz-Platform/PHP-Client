@@ -5,10 +5,10 @@ namespace Attlaz\Model;
 
 class Project
 {
-    public string $id;
-    public string $key;
-    public string $name;
+    public $id;
+    public $key;
+    public $name;
     public $team;
-    public string $defaultEnvironmentId;
+    public $defaultEnvironmentId;
     public $state;
 }

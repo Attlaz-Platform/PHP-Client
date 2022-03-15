@@ -5,8 +5,8 @@ namespace Attlaz\Model;
 
 class TaskExecutionResult
 {
-    private bool $success;
-    private string $id;
+    private $success;
+    private $id;
     public $result;
 
     public function __construct(bool $success, string $id)

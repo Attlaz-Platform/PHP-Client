@@ -8,7 +8,6 @@ use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Config;
 use Attlaz\Model\Exception\RequestException;
-use Attlaz\Model\LogEntry;
 use Attlaz\Model\Project;
 use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\Task;
@@ -20,19 +19,19 @@ use Psr\Http\Message\RequestInterface;
 
 class Client
 {
-    private string $endPoint = 'https://api.attlaz.com';
-    private string $clientId;
-    private string $clientSecret;
-    private bool $storeToken = false;
-    private int $timeout = 20;
+    private $endPoint = 'https://api.attlaz.com';
+    private $clientId;
+    private $clientSecret;
+    private $storeToken = false;
+    private $timeout = 20;
 
-    private bool $debug = false;
+    private $debug = false;
 
-    private ?GenericProvider $provider = null;
-    private ?AccessToken $accessToken = null;
+    private $provider = null;
+    private $accessToken = null;
 
-    private StorageEndpoint $storageEndpoint;
-    private LogEndpoint $logEndpoint;
+    private $storageEndpoint;
+    private $logEndpoint;
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
@@ -501,6 +500,7 @@ class Client
     {
         return $this->storageEndpoint;
     }
+
     public function getLogEndpoint(): LogEndpoint
     {
         return $this->logEndpoint;

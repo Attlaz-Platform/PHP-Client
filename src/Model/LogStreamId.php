@@ -5,7 +5,7 @@ namespace Attlaz\Model;
 
 class LogStreamId
 {
-    private string $id;
+    private $id;
 
 
     public function __construct(string $id)
