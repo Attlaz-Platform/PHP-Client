@@ -5,8 +5,8 @@ namespace Attlaz\Model;
 
 class StorageItem
 {
-    public string $key;
+    public $key;
     /** @var string|int|float|array|object|null|bool */
     public $value;
-    public ?\DateTime $expiration = null;
+    public $expiration = null;
 }

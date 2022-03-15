@@ -8,7 +8,8 @@ use Attlaz\Model\StorageItem;
 
 class StorageEndpoint
 {
-    private Client $client;
+    /** @var Client */
+    private $client;
 
     public function __construct(Client $client)
     {

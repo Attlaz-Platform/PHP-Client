@@ -8,7 +8,8 @@ use Attlaz\Model\LogEntry;
 
 class LogEndpoint
 {
-    private Client $client;
+    /** @var Client  */
+    private $client;
 
     public function __construct(Client $client)
     {
