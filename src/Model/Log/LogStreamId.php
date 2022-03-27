@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Attlaz\Model;
+namespace Attlaz\Model\Log;
 
 class LogStreamId
 {
@@ -13,7 +13,7 @@ class LogStreamId
         $this->id = $id;
     }
 
-    public function getId(): string
+    public function __toString(): string
     {
         return $this->id;
     }

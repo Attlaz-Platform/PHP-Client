@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Endpoint\ConnectionEndpoint;
 use Attlaz\Endpoint\LogEndpoint;
 use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Config;
 use Attlaz\Model\Exception\RequestException;
-use Attlaz\Model\LogEntry;
 use Attlaz\Model\Project;
 use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\Task;
@@ -33,6 +33,7 @@ class Client
 
     private StorageEndpoint $storageEndpoint;
     private LogEndpoint $logEndpoint;
+    private ConnectionEndpoint $connectionEndpoint;
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
@@ -463,29 +464,6 @@ class Client
         return $projectEnvironments;
     }
 
-    /**
-     * @param string $projectId
-     * @return array[]
-     * @throws RequestException
-     */
-    public function getConnections(string $projectId): array
-    {
-        $uri = '/connections?projectId=' . $projectId;
-
-        $request = $this->createRequest('GET', $uri);
-
-//        $connections = [];
-
-        $response = $this->sendRequest($request);
-        $rawConnections = $response['data'];
-//        foreach ($rawEnvironments as $rawEnvironment) {
-//            $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
-//        }
-//
-//        return $projectEnvironments;
-
-        return $rawConnections;
-    }
 
     public function enableDebug()
     {
@@ -501,8 +479,14 @@ class Client
     {
         return $this->storageEndpoint;
     }
+
     public function getLogEndpoint(): LogEndpoint
     {
         return $this->logEndpoint;
+    }
+
+    public function getConnectionEndpoint(): ConnectionEndpoint
+    {
+        return $this->connectionEndpoint;
     }
 }

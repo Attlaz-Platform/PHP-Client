@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 use Attlaz\Client;
-use Attlaz\Model\LogEntry;
+use Attlaz\Model\Log\LogEntry;
+use Attlaz\Model\Log\LogStream;
+use Attlaz\Model\Log\LogStreamId;
 
 class LogEndpoint
 {
@@ -19,7 +21,7 @@ class LogEndpoint
     {
         $body = $logEntry;
 
-        $uri = '/logstreams/' . \base64_encode($logEntry->getLogStreamId()->getId()) . '/logs';
+        $uri = '/logstreams/' . \base64_encode($logEntry->getLogStreamId()->__toString()) . '/logs';
 
         $request = $this->client->createRequest('POST', $uri, $body);
 
@@ -33,5 +35,37 @@ class LogEndpoint
             return $logEntry;
         }
         throw new \Exception('Unable to save log entry: invalid response');
+    }
+
+    /**
+     * @param string $projectId
+     * @return LogStream[]
+     * @throws \Attlaz\Model\Exception\RequestException
+     */
+    public function getLogStreams(string $projectId): array
+    {
+
+        $uri = '/project/' . $projectId . '/logstreams';
+
+        $request = $this->client->createRequest('GET', $uri);
+
+        $response = $this->client->sendRequest($request);
+
+
+        if (isset($response['data'])) {
+
+            $result = [];
+            foreach ($response['data'] as $logStream) {
+
+                $id = $logStream['id'];
+                if (\is_array($id)) {
+                    $id = $id['id'];
+                }
+                $result[] = new LogStream(new LogStreamId($id), $logStream['name']);
+            }
+
+            return $result;
+        }
+        throw new \Exception('Unable to get log streams: invalid response');
     }
 }
