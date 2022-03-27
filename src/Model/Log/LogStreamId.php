@@ -13,7 +13,7 @@ class LogStreamId
         $this->id = $id;
     }
 
-    public function getId(): string
+    public function __toString(): string
     {
         return $this->id;
     }
