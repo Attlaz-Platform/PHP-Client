@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Attlaz\Model;
+namespace Attlaz\Model\Log;
 
 class LogStreamId
 {
