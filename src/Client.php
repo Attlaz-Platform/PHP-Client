@@ -50,6 +50,7 @@ class Client
 
         $this->storageEndpoint = new StorageEndpoint($this);
         $this->logEndpoint = new LogEndpoint($this);
+        $this->connectionEndpoint = new ConnectionEndpoint($this);
     }
 
     public function setEndPoint(string $endPoint): void
