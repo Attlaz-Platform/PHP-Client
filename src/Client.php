@@ -465,6 +465,19 @@ class Client
         return $projectEnvironments;
     }
 
+    public function getApiVersion(): ?string
+    {
+        $uri = '/system/health';
+
+        $request = $this->createRequest('GET', $uri);
+
+
+        $rawResponse = $this->sendRequest($request);
+        if (isset($rawResponse['version'])) {
+            return $rawResponse['version'];
+        }
+        return null;
+    }
 
     public function enableDebug()
     {
