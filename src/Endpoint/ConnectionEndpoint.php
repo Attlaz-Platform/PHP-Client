@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 use Attlaz\Client;
+use Attlaz\Model\AdapterConnection;
 use Attlaz\Model\Exception\RequestException;
 
 class ConnectionEndpoint
@@ -17,7 +18,7 @@ class ConnectionEndpoint
 
     /**
      * @param string $projectId
-     * @return array[]
+     * @return AdapterConnection[]
      * @throws RequestException
      */
     public function getConnections(string $projectId): array
@@ -26,16 +27,34 @@ class ConnectionEndpoint
 
         $request = $this->client->createRequest('GET', $uri);
 
-//        $connections = [];
-
         $response = $this->client->sendRequest($request);
         $rawConnections = $response['data'];
-//        foreach ($rawEnvironments as $rawEnvironment) {
-//            $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
-//        }
-//
-//        return $projectEnvironments;
 
-        return $rawConnections;
+        $connections = [];
+        foreach ($rawConnections as $rawConnection) {
+            $connections[] = new AdapterConnection($rawConnection);
+        }
+
+        return $connections;
+    }
+
+    /**
+     * @param string $connectionKey
+     * @return AdapterConnection|null
+     * @throws RequestException
+     */
+    public function getConnection(string $connectionKey): ?AdapterConnection
+    {
+        $uri = '/connections/' . $connectionKey . '';
+
+        $request = $this->client->createRequest('GET', $uri);
+
+        $response = $this->client->sendRequest($request);
+        
+        if (isset($response['errors']) && count($response['errors']) > 0) {
+            return null;
+        }
+        $rawConnection = $response['data'];
+        return new AdapterConnection($rawConnection);
     }
 }
