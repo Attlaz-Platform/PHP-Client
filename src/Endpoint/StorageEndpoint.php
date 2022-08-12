@@ -124,12 +124,12 @@ class StorageEndpoint
         throw new \Exception('Invalid response');
     }
 
-    public function deleteItem(string $projectEnvironmentId, string $storageType, string $key, ?string $poolKey = null): bool
+    public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
     {
         if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $key;
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $storageItemKey;
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $key;
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
 
         $request = $this->client->createRequest('DELETE', $uri);
@@ -145,11 +145,11 @@ class StorageEndpoint
         throw new \Exception('Invalid response');
     }
 
-    public function deleteItems(string $projectEnvironmentId, string $storageType, array $keys, ?string $poolKey = null): array
+    public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, ?string $poolKey = null): array
     {
         $result = [];
-        foreach ($keys as $key) {
-            $result[$key] = $this->deleteItem($projectEnvironmentId, $storageType, $key, $poolKey);
+        foreach ($storageItemKeys as $storageItemKey) {
+            $result[$storageItemKey] = $this->deleteItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey);
         }
         return $result;
     }
