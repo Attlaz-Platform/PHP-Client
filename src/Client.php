@@ -436,9 +436,11 @@ class Client
         $request = $this->createRequest('GET', $uri);
 
         $rawProjects = $this->sendRequest($request);
+        if (isset($rawProjects['data'])) {
+            $rawProjects = $rawProjects['data'];
+        }
         foreach ($rawProjects as $rawProject) {
-            $project = $this->parseProject($rawProject);
-            $projects[] = $project;
+            $projects[] = $this->parseProject($rawProject);
         }
 
         return $projects;
@@ -458,6 +460,10 @@ class Client
         $projectEnvironments = [];
         //TODO: handle when environment is not found
         $rawEnvironments = $this->sendRequest($request);
+        $rawProjects = $this->sendRequest($request);
+        if (isset($rawProjects['data'])) {
+            $rawProjects = $rawProjects['data'];
+        }
         foreach ($rawEnvironments as $rawEnvironment) {
             $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
         }
