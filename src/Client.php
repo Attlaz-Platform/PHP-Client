@@ -378,7 +378,7 @@ class Client
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
-        $project->team = $rawProject['team'];
+        $project->team = $rawProject['teamId'];
         $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
         $project->state = $rawProject['state'];
 
