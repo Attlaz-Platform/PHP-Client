@@ -28,22 +28,28 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
+        if (is_null($rawItem['data'])) {
+            return null;
+        }
+
         if (isset($rawItem['data']) && isset($rawItem['data']['item'])) {
+            // TODO: remove this fallback to old method once no longer needed
             $rawItem = $rawItem['data']['item'];
 
 
-            $item = new StorageItem();
-            $item->key = $rawItem['key'];
-            $item->value = $this->thawValue($rawItem['value']);
-
-            if ($rawItem['expiration'] !== null) {
-                $rawItem['expiration'] = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
-            }
-            return $item;
-
+        } else {
+            $rawItem = $rawItem['data'];
         }
 
-        return null;
+
+        $item = new StorageItem();
+        $item->key = $rawItem['key'];
+        $item->value = $this->thawValue($rawItem['value']);
+
+        if ($rawItem['expiration'] !== null) {
+            $rawItem['expiration'] = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
+        }
+        return $item;
     }
 
     public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
@@ -88,7 +94,7 @@ class StorageEndpoint
 
         $storageItem->value = $this->freezeValue($storageItem->value);
 
-        $request = $this->client->createRequest('POST', $uri, ['storage_item' => $storageItem]);
+        $request = $this->client->createRequest('POST', $uri, $storageItem);
 
         $rawResult = $this->client->sendRequest($request);
 
@@ -117,9 +123,10 @@ class StorageEndpoint
         $rawItem = $this->client->sendRequest($request);
 
         if (isset($rawItem['data']) && isset($rawItem['data']['item_keys'])) {
+            // TODO: remove this fallback to old method once no longer needed
             return $rawItem['data']['item_keys'];
-
         }
+        return $rawItem['data'];
 
         throw new \Exception('Invalid response');
     }
@@ -165,17 +172,22 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['pools'])) {
-            $rawPools = $rawItem['data']['pools'];
-            $result = [];
-            foreach ($rawPools as $rawPool) {
-                $result[] = $rawPool['name'];
-            }
-            return $result;
-
+        if (\is_null($rawItem['data'])) {
+            throw new \Exception('Invalid response');
         }
 
-        throw new \Exception('Invalid response');
+        $rawPools = $rawItem['data'];
+        if (isset($rawItem['data']) && isset($rawItem['data']['pools'])) {
+            // TODO: remove this fallback to old method once no longer needed
+            $rawPools = $rawItem['data']['pools'];
+
+
+        }
+        $result = [];
+        foreach ($rawPools as $rawPool) {
+            $result[] = $rawPool['name'];
+        }
+        return $result;
     }
 
     public function clearPool(string $projectEnvironmentId, string $storageType, ?string $poolKey = null): bool
