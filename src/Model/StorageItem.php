@@ -9,4 +9,13 @@ class StorageItem
     /** @var string|int|float|array|object|null|bool */
     public $value;
     public ?\DateTime $expiration = null;
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'key'        => $this->key,
+            'value'      => $this->value,
+            'expiration' => $this->expiration->format(\DateTime::RFC3339_EXTENDED),
+        ];
+    }
 }

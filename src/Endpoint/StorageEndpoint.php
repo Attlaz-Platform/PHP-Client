@@ -92,9 +92,10 @@ class StorageEndpoint
         }
 
 
-        $storageItem->value = $this->freezeValue($storageItem->value);
+        $copy = clone $storageItem;
+        $copy->value = $this->freezeValue($copy->value);
 
-        $request = $this->client->createRequest('POST', $uri, $storageItem);
+        $request = $this->client->createRequest('POST', $uri, $copy);
 
         $rawResult = $this->client->sendRequest($request);
 
