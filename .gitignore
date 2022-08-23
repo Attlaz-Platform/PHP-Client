@@ -2,3 +2,5 @@
 *.iml
 vendor
 .env
+.phpunit.*
+_token_*
