@@ -350,7 +350,6 @@ class Client
     public function getProjectById(string $projectId): Project
     {
         $projects = $this->getProjects();
-
         foreach ($projects as $project) {
             if ($project->id === $projectId) {
                 return $project;
@@ -378,7 +377,12 @@ class Client
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
-        $project->team = $rawProject['teamId'];
+
+        if (isset($rawProject['team'])) {
+            $project->team = $rawProject['team'];
+        } else {
+            $project->team = $rawProject['teamId'];
+        }
         $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
         $project->state = $rawProject['state'];
 
@@ -460,9 +464,8 @@ class Client
         $projectEnvironments = [];
         //TODO: handle when environment is not found
         $rawEnvironments = $this->sendRequest($request);
-        $rawProjects = $this->sendRequest($request);
-        if (isset($rawProjects['data'])) {
-            $rawProjects = $rawProjects['data'];
+        if (isset($rawEnvironments['data'])) {
+            $rawEnvironments = $rawEnvironments['data'];
         }
         foreach ($rawEnvironments as $rawEnvironment) {
             $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
