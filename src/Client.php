@@ -377,7 +377,12 @@ class Client
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
-        $project->team = $rawProject['teamId'];
+
+        if (isset($rawProject['team'])) {
+            $project->team = $rawProject['team'];
+        } else {
+            $project->team = $rawProject['teamId'];
+        }
         $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
         $project->state = $rawProject['state'];
 
