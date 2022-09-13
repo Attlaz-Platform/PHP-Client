@@ -13,13 +13,18 @@ use Attlaz\Model\Project;
 use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\Task;
 use Attlaz\Model\TaskExecutionResult;
+use Echron\Tools\Time;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use Psr\Http\Message\RequestInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
-class Client
+class Client implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     private string $endPoint = 'https://api.attlaz.com';
     private string $clientId;
     private string $clientSecret;
@@ -34,6 +39,8 @@ class Client
     private StorageEndpoint $storageEndpoint;
     private LogEndpoint $logEndpoint;
     private ConnectionEndpoint $connectionEndpoint;
+
+    private bool $profileRequests = false;
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
@@ -139,9 +146,13 @@ class Client
         return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
+
     public function sendRequest(RequestInterface $request): array
     {
         try {
+
+            $startTime = \microtime(true);
+
             $response = $this->provider->getHttpClient()
                 ->send($request, ['debug' => $this->debug]);
 
@@ -150,6 +161,10 @@ class Client
 
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
+        }
+
+        if ($this->profileRequests && $this->logger !== null) {
+            $this->logger->info('[Attlaz Client Request]: ' . $request->getMethod() . ' ' . $request->getUri() . ' ' . Time::readableSeconds(\microtime(true) - $startTime));
         }
 
         return $jsonResponse;
@@ -496,6 +511,16 @@ class Client
     public function disableDebug()
     {
         $this->debug = false;
+    }
+
+    public function enableRequestProfiling()
+    {
+        $this->profileRequests = true;
+    }
+
+    public function disableRequestProfiling()
+    {
+        $this->profileRequests = false;
     }
 
     public function getStorageEndpoint(): StorageEndpoint
