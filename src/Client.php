@@ -13,18 +13,13 @@ use Attlaz\Model\Project;
 use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\Task;
 use Attlaz\Model\TaskExecutionResult;
-use Echron\Tools\Time;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use Psr\Http\Message\RequestInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
 
-class Client implements LoggerAwareInterface
+class Client
 {
-    use LoggerAwareTrait;
-
     private string $endPoint = 'https://api.attlaz.com';
     private string $clientId;
     private string $clientSecret;
@@ -41,6 +36,8 @@ class Client implements LoggerAwareInterface
     private ConnectionEndpoint $connectionEndpoint;
 
     private bool $profileRequests = false;
+
+    private array $profiles = [];
 
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
@@ -163,9 +160,15 @@ class Client implements LoggerAwareInterface
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
         } finally {
-            if ($this->profileRequests && $this->logger !== null) {
+            if ($this->profileRequests) {
                 $seconds = \microtime(true) - $startTime;
-                $this->logger->info('[Attlaz Client Request]: ' . $request->getMethod() . ' ' . $request->getUri() . ' ' . Time::readableSeconds($seconds), ['Raw time (s)' => $seconds, 'Response status' => $response->getStatusCode(), 'Uri' => $request->getUri(), 'Body' => $request->getBody()]);
+
+                $this->profiles[] = [
+                    'Uri'           => $request->getUri(),
+                    'Method'        => $request->getMethod(),
+                    'Response code' => $response->getStatusCode(),
+                    'Duration'      => $seconds
+                ];
             }
         }
 
@@ -523,6 +526,11 @@ class Client implements LoggerAwareInterface
     public function disableRequestProfiling()
     {
         $this->profileRequests = false;
+    }
+
+    public function getProfiles(): array
+    {
+        return $this->profiles;
     }
 
     public function getStorageEndpoint(): StorageEndpoint
