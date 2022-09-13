@@ -156,15 +156,17 @@ class Client implements LoggerAwareInterface
             $response = $this->provider->getHttpClient()
                 ->send($request, ['debug' => $this->debug]);
 
+
             $jsonResponse = \json_decode($response->getBody()
                 ->getContents(), true);
 
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
-        }
-
-        if ($this->profileRequests && $this->logger !== null) {
-            $this->logger->info('[Attlaz Client Request]: ' . $request->getMethod() . ' ' . $request->getUri() . ' ' . Time::readableSeconds(\microtime(true) - $startTime));
+        } finally {
+            if ($this->profileRequests && $this->logger !== null) {
+                $seconds = \microtime(true) - $startTime;
+                $this->logger->info('[Attlaz Client Request]: ' . $request->getMethod() . ' ' . $request->getUri() . ' ' . Time::readableSeconds($seconds), ['Raw time (s)' => $seconds, 'Response status' => $response->getStatusCode(), 'Uri' => $request->getUri(), 'Body' => $request->getBody()]);
+            }
         }
 
         return $jsonResponse;
