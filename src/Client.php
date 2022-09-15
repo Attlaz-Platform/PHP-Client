@@ -146,6 +146,7 @@ class Client
 
     public function sendRequest(RequestInterface $request): array
     {
+        $response = null;
         try {
 
             $startTime = \microtime(true);
@@ -166,7 +167,7 @@ class Client
                 $this->profiles[] = [
                     'Uri'           => $request->getUri(),
                     'Method'        => $request->getMethod(),
-                    'Response code' => $response->getStatusCode(),
+                    'Response code' => $response === null ? '' : $response->getStatusCode(),
                     'Duration'      => $seconds
                 ];
             }
