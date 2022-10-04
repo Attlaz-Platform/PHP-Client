@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Model;
 
-class StorageItem
+class StorageItem implements \JsonSerializable
 {
     public string $key;
     /** @var string|int|float|array|object|null|bool */
