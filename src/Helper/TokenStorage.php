@@ -22,13 +22,11 @@ class TokenStorage
 
             if (!is_null($accessToken) && is_a($accessToken, AccessToken::class) && !$accessToken->hasExpired()) {
                 return $accessToken;
-            } else {
+            }
+            try {
+                \unlink($file);
+            } catch (\Throwable $ex) {
 
-                try {
-                    \unlink($file);
-                } catch (\Throwable $ex) {
-
-                }
             }
         }
 
@@ -45,7 +43,7 @@ class TokenStorage
         ];
     }
 
-    public static function saveAccessToken(AccessToken $accessToken, string $clientId, string $clientSecret)
+    public static function saveAccessToken(AccessToken $accessToken, string $clientId, string $clientSecret): void
     {
         $data = self::getData($clientId, $clientSecret);
 

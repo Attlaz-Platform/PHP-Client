@@ -65,7 +65,7 @@ class Client
         $this->endPoint = rtrim($endPoint, "/");
     }
 
-    private function authenticate()
+    private function authenticate(): void
     {
 
 
@@ -114,12 +114,12 @@ class Client
         return $this->accessToken;
     }
 
-    public function setAccessToken(AccessToken $accessToken)
+    public function setAccessToken(AccessToken $accessToken): void
     {
         $this->accessToken = $accessToken;
     }
 
-    public function setTimeout(int $timeout)
+    public function setTimeout(int $timeout): void
     {
         $this->timeout = $timeout;
     }
@@ -311,9 +311,7 @@ class Client
         //TODO: handle when no execution is found
         $request = $this->createRequest('GET', $uri);
 
-        $response = $this->sendRequest($request);
-
-        return $response;
+        return $this->sendRequest($request);
     }
 
     public function updateTaskExecution(string $taskExecutionId, string $status, int $time = null): void
@@ -323,7 +321,7 @@ class Client
             'time'   => $time,
         ];
 
-        $uri = '/taskexecutions/' . $taskExecutionId . '';
+        $uri = '/taskexecutions/' . $taskExecutionId;
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -509,22 +507,22 @@ class Client
         return null;
     }
 
-    public function enableDebug()
+    public function enableDebug(): void
     {
         $this->debug = true;
     }
 
-    public function disableDebug()
+    public function disableDebug(): void
     {
         $this->debug = false;
     }
 
-    public function enableRequestProfiling()
+    public function enableRequestProfiling(): void
     {
         $this->profileRequests = true;
     }
 
-    public function disableRequestProfiling()
+    public function disableRequestProfiling(): void
     {
         $this->profileRequests = false;
     }

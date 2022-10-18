@@ -5,6 +5,7 @@ namespace Attlaz\Endpoint;
 
 use Attlaz\Client;
 use Attlaz\Model\StorageItem;
+use DateTimeInterface;
 
 class StorageEndpoint
 {
@@ -47,7 +48,7 @@ class StorageEndpoint
         $item->value = $this->thawValue($rawItem['value']);
 
         if ($rawItem['expiration'] !== null) {
-            $rawItem['expiration'] = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
+            $rawItem['expiration'] = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
         }
         return $item;
     }
@@ -91,11 +92,10 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
         }
 
+        $data = clone $storageItem;
+        $data->value = $this->freezeValue($data->value);
 
-        $copy = clone $storageItem;
-        $copy->value = $this->freezeValue($copy->value);
-
-        $request = $this->client->createRequest('POST', $uri, $copy);
+        $request = $this->client->createRequest('POST', $uri, $data);
 
         $rawResult = $this->client->sendRequest($request);
 
