@@ -25,8 +25,8 @@ class StorageTest extends TestCase
 //            'https://api.attlaz.com/1.6',
 //            'https://api.attlaz.com/1.7',
 //            'https://api.attlaz.com/1.8',
-//            'https://api.attlaz.com/beta'
-'https://a395-152-37-83-170.ngrok.io'
+'https://api.attlaz.com/beta'
+//'https://a395-152-37-83-170.ngrok.io'
         ];
 
         $keys = [
@@ -66,7 +66,8 @@ class StorageTest extends TestCase
             'https://api.attlaz.com/1.6',
             'https://api.attlaz.com/1.7',
             'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+            'https://api.attlaz.com/beta',
+            //'https://24c4-188-211-160-246.ngrok.io/'
         ];
 
         $values = [

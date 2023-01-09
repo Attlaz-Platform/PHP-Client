@@ -17,7 +17,7 @@ class StorageItem implements \JsonSerializable
         return [
             'key'        => $this->key,
             'value'      => $this->value,
-            'expiration' => $this->expiration->format(DateTimeInterface::RFC3339_EXTENDED),
+            'expiration' => $this->expiration === null ? null : $this->expiration->format(DateTimeInterface::RFC3339_EXTENDED),
         ];
     }
 }
