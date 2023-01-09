@@ -21,6 +21,8 @@ class LogTest extends TestCase
     {
 
         $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+        $client->enableDebug();
+
         $endpoints = [
             'https://api.attlaz.com',
             'https://api.attlaz.com/1.6',
@@ -30,7 +32,7 @@ class LogTest extends TestCase
         ];
         foreach ($endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
-            $client->enableDebug();
+
 
             $logEntry = new LogEntry(new LogStreamId('test:php-client'), 'TEST API 3 ' . $this->generateRandomString(500), 'info', new \DateTime('now'));
 

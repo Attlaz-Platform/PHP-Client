@@ -268,7 +268,9 @@ class Client
         $request = $this->createRequest('GET', $uri);
 
         $rawTasks = $this->sendRequest($request);
-
+        if (isset($rawTasks['data'])) {
+            $rawTasks = $rawTasks['data'];
+        }
         $tasks = [];
         if (!\is_null($rawTasks)) {
             foreach ($rawTasks as $rawTask) {
@@ -277,9 +279,15 @@ class Client
                 $task->key = $rawTask['key'];
                 $task->name = $rawTask['name'];
                 $task->description = $rawTask['description'];
-                $task->project = $rawTask['project'];
+                $task->project = $this->getProjectIdFromRawValue($rawTask);
+
+                if (isset($rawTask['isDirect'])) {
+                    $task->direct = $rawTask['isDirect'];
+                } else {
+                    $task->direct = $rawTask['direct'];
+                }
                 $task->state = $rawTask['state'];
-                $task->direct = $rawTask['direct'];
+
 
                 $tasks[] = $task;
             }
@@ -354,8 +362,10 @@ class Client
                 $configValue->inheritable = $rawConfigValue['inheritable'];
                 $configValue->sensitive = $rawConfigValue['sensitive'];
                 $configValue->state = $rawConfigValue['state'];
-                $configValue->project = $rawConfigValue['project'];
-                $configValue->projectEnvironment = (string)$rawConfigValue['projectEnvironment'];
+                $configValue->project = $this->getProjectIdFromRawValue($rawConfigValue);
+                $configValue->projectEnvironment = $this->getProjectEnvironmentIdFromRawValue($rawConfigValue);
+
+
                 $configValue->key = $rawConfigValue['key'];
                 $configValue->value = $rawConfigValue['value'];
 
@@ -365,6 +375,29 @@ class Client
 
         return $result;
     }
+
+    private function getProjectIdFromRawValue(array $rawValue): string
+    {
+        $tries = ['project', 'project_id', 'projectId'];
+        foreach ($tries as $try) {
+            if (isset($rawValue[$try])) {
+                return $rawValue[$try];
+            }
+        }
+        throw new \Error('Project not found in raw value');
+    }
+
+    private function getProjectEnvironmentIdFromRawValue(array $rawValue): string
+    {
+        $tries = ['project_environment', 'project_environment_id', 'projectEnvironment', 'projectEnvironmentId'];
+        foreach ($tries as $try) {
+            if (isset($rawValue[$try])) {
+                return $rawValue[$try];
+            }
+        }
+        throw new \Error('Project environment not found in raw value');
+    }
+
 
     public function getProjectById(string $projectId): Project
     {
