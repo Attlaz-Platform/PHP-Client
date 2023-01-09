@@ -35,6 +35,10 @@ class Client
     private LogEndpoint $logEndpoint;
     private ConnectionEndpoint $connectionEndpoint;
 
+    private bool $profileRequests = false;
+
+    private array $profiles = [];
+
     public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
     {
         if (empty($clientId)) {
@@ -61,7 +65,7 @@ class Client
         $this->endPoint = rtrim($endPoint, "/");
     }
 
-    private function authenticate()
+    private function authenticate(): void
     {
 
 
@@ -110,12 +114,12 @@ class Client
         return $this->accessToken;
     }
 
-    public function setAccessToken(AccessToken $accessToken)
+    public function setAccessToken(AccessToken $accessToken): void
     {
         $this->accessToken = $accessToken;
     }
 
-    public function setTimeout(int $timeout)
+    public function setTimeout(int $timeout): void
     {
         $this->timeout = $timeout;
     }
@@ -139,17 +143,34 @@ class Client
         return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
+
     public function sendRequest(RequestInterface $request): array
     {
+        $response = null;
         try {
+
+            $startTime = \microtime(true);
+
             $response = $this->provider->getHttpClient()
                 ->send($request, ['debug' => $this->debug]);
+
 
             $jsonResponse = \json_decode($response->getBody()
                 ->getContents(), true);
 
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
+        } finally {
+            if ($this->profileRequests) {
+                $seconds = \microtime(true) - $startTime;
+
+                $this->profiles[] = [
+                    'Uri'           => $request->getUri(),
+                    'Method'        => $request->getMethod(),
+                    'Response code' => $response === null ? '' : $response->getStatusCode(),
+                    'Duration'      => $seconds
+                ];
+            }
         }
 
         return $jsonResponse;
@@ -247,7 +268,9 @@ class Client
         $request = $this->createRequest('GET', $uri);
 
         $rawTasks = $this->sendRequest($request);
-
+        if (isset($rawTasks['data'])) {
+            $rawTasks = $rawTasks['data'];
+        }
         $tasks = [];
         if (!\is_null($rawTasks)) {
             foreach ($rawTasks as $rawTask) {
@@ -256,9 +279,15 @@ class Client
                 $task->key = $rawTask['key'];
                 $task->name = $rawTask['name'];
                 $task->description = $rawTask['description'];
-                $task->project = $rawTask['project'];
+                $task->project = $this->getProjectIdFromRawValue($rawTask);
+
+                if (isset($rawTask['isDirect'])) {
+                    $task->direct = $rawTask['isDirect'];
+                } else {
+                    $task->direct = $rawTask['direct'];
+                }
                 $task->state = $rawTask['state'];
-                $task->direct = $rawTask['direct'];
+
 
                 $tasks[] = $task;
             }
@@ -290,9 +319,7 @@ class Client
         //TODO: handle when no execution is found
         $request = $this->createRequest('GET', $uri);
 
-        $response = $this->sendRequest($request);
-
-        return $response;
+        return $this->sendRequest($request);
     }
 
     public function updateTaskExecution(string $taskExecutionId, string $status, int $time = null): void
@@ -302,7 +329,7 @@ class Client
             'time'   => $time,
         ];
 
-        $uri = '/taskexecutions/' . $taskExecutionId . '';
+        $uri = '/taskexecutions/' . $taskExecutionId;
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -335,8 +362,10 @@ class Client
                 $configValue->inheritable = $rawConfigValue['inheritable'];
                 $configValue->sensitive = $rawConfigValue['sensitive'];
                 $configValue->state = $rawConfigValue['state'];
-                $configValue->project = $rawConfigValue['project'];
-                $configValue->projectEnvironment = (string)$rawConfigValue['projectEnvironment'];
+                $configValue->project = $this->getProjectIdFromRawValue($rawConfigValue);
+                $configValue->projectEnvironment = $this->getProjectEnvironmentIdFromRawValue($rawConfigValue);
+
+
                 $configValue->key = $rawConfigValue['key'];
                 $configValue->value = $rawConfigValue['value'];
 
@@ -346,6 +375,29 @@ class Client
 
         return $result;
     }
+
+    private function getProjectIdFromRawValue(array $rawValue): string
+    {
+        $tries = ['project', 'project_id', 'projectId'];
+        foreach ($tries as $try) {
+            if (isset($rawValue[$try])) {
+                return $rawValue[$try];
+            }
+        }
+        throw new \Error('Project not found in raw value');
+    }
+
+    private function getProjectEnvironmentIdFromRawValue(array $rawValue): string
+    {
+        $tries = ['project_environment', 'project_environment_id', 'projectEnvironment', 'projectEnvironmentId'];
+        foreach ($tries as $try) {
+            if (isset($rawValue[$try])) {
+                return $rawValue[$try];
+            }
+        }
+        throw new \Error('Project environment not found in raw value');
+    }
+
 
     public function getProjectById(string $projectId): Project
     {
@@ -488,14 +540,29 @@ class Client
         return null;
     }
 
-    public function enableDebug()
+    public function enableDebug(): void
     {
         $this->debug = true;
     }
 
-    public function disableDebug()
+    public function disableDebug(): void
     {
         $this->debug = false;
+    }
+
+    public function enableRequestProfiling(): void
+    {
+        $this->profileRequests = true;
+    }
+
+    public function disableRequestProfiling(): void
+    {
+        $this->profileRequests = false;
+    }
+
+    public function getProfiles(): array
+    {
+        return $this->profiles;
     }
 
     public function getStorageEndpoint(): StorageEndpoint

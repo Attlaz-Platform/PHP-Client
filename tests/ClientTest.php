@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
-
-use Attlaz\Model\Log\LogEntry;
-use Attlaz\Model\Log\LogStreamId;
 use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
@@ -20,7 +17,7 @@ class ClientTest extends TestCase
     public function testGet()
     {
 
-        $client = new \Attlaz\Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
 //        $client->enableDebug();
         $endpoints = [
             'https://api.attlaz.com',
@@ -31,8 +28,6 @@ class ClientTest extends TestCase
         ];
         foreach ($endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
-//$client = new \Attlaz\Client('http://10.0.75.1:8080/', '6as&01LW!iVe!wO7Guv%5#MlfZ2SJgSG', '#zqtn*4IKcx7iNM4bNvc$XU@H27prch8');
-
 
             $project = $client->getProjectById('0DF2CCCDF');
             $this->assertEquals('0DF2CCCDF', $project->id);
@@ -53,6 +48,70 @@ class ClientTest extends TestCase
 
     }
 
+    public function testGetProjectEnvironments()
+    {
 
+        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+//        $client->enableDebug();
+        $endpoints = [
+            'https://api.attlaz.com',
+            'https://api.attlaz.com/1.6',
+            'https://api.attlaz.com/1.7',
+            'https://api.attlaz.com/1.8',
+            'https://api.attlaz.com/beta'
+        ];
+        foreach ($endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
+
+            $projectEnvironments = $client->getProjectEnvironments('0DF2CCCDF');
+
+
+            $this->assertCount(3, $projectEnvironments);
+        }
+    }
+
+    public function testGetProjects()
+    {
+
+        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+//        $client->enableDebug();
+        $endpoints = [
+            'https://api.attlaz.com',
+            'https://api.attlaz.com/1.6',
+            'https://api.attlaz.com/1.7',
+            'https://api.attlaz.com/1.8',
+            'https://api.attlaz.com/beta'
+        ];
+        foreach ($endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
+
+            $projects = $client->getProjects();
+
+
+            $this->assertCount(1, $projects);
+        }
+    }
+
+    public function testGetFlows()
+    {
+
+        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+//        $client->enableDebug();
+        $endpoints = [
+            'https://api.attlaz.com',
+            'https://api.attlaz.com/1.6',
+            'https://api.attlaz.com/1.7',
+            'https://api.attlaz.com/1.8',
+            'https://api.attlaz.com/beta'
+        ];
+        foreach ($endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
+
+            $flows = $client->getTasks('0DF2CCCDF');
+
+
+            $this->assertCount(6, $flows);
+        }
+    }
 }
 

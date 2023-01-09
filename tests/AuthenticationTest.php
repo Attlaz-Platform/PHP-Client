@@ -40,6 +40,8 @@ class AuthenticationTest extends TestCase
 //}
         $accessToken = $client->getAccessToken();
         $secondsToExpireToken = ($accessToken->getExpires() - time());
+
+        $this->assertGreaterThanOrEqual(5, $secondsToExpireToken);
         echo 'Token expires in ' . $secondsToExpireToken . ' seconds' . PHP_EOL;
         $secondsToSleep = $secondsToExpireToken + 5;
         echo 'Sleep ' . $secondsToSleep . ' seconds so the token expires' . PHP_EOL;

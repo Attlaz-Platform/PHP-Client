@@ -45,12 +45,12 @@ class ConnectionEndpoint
      */
     public function getConnection(string $connectionKey): ?AdapterConnection
     {
-        $uri = '/connections/' . $connectionKey . '';
+        $uri = '/connections/' . $connectionKey;
 
         $request = $this->client->createRequest('GET', $uri);
 
         $response = $this->client->sendRequest($request);
-        
+
         if (isset($response['errors']) && count($response['errors']) > 0) {
             return null;
         }
