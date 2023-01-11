@@ -401,13 +401,13 @@ class Client
 
     public function getProjectById(string $projectId): Project
     {
-        $projects = $this->getProjects();
-        foreach ($projects as $project) {
-            if ($project->id === $projectId) {
-                return $project;
-            }
-        }
+        $uri = '/projects/' . $projectId;
+        $request = $this->createRequest('GET', $uri);
+        $rawProject = $this->sendRequest($request);
+        if ($rawProject === null) {
         throw new \Exception('No project with id "' . $projectId . '" found');
+    }
+        return $this->parseProject($rawProject);
     }
 
     public function getProjectEnvironmentById(string $projectEnvironmentId): ProjectEnvironment
