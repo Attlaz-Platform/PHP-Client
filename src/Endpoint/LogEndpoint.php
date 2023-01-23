@@ -3,19 +3,14 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
-use Attlaz\Client;
 use Attlaz\Model\Log\LogEntry;
 use Attlaz\Model\Log\LogStream;
 use Attlaz\Model\Log\LogStreamId;
 
-class LogEndpoint
-{
-    private Client $client;
 
-    public function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
+class LogEndpoint extends Endpoint
+{
+
 
     public function saveLog(LogEntry $logEntry): LogEntry
     {
@@ -23,18 +18,16 @@ class LogEndpoint
 
         $uri = '/logstreams/' . \base64_encode($logEntry->getLogStreamId()->__toString()) . '/logs';
 
-        $request = $this->client->createRequest('POST', $uri, $body);
 
-        $response = $this->client->sendRequest($request);
+        $rawLogEntry = $this->requestObject($uri, $body, 'POST');
 
 
-        if (isset($response['data'])) {
-            // TODO: validate of saving was successfull
-            $savedEntry = $response['data'];
-            $logEntry->id = $savedEntry['id'];
-            return $logEntry;
-        }
-        throw new \Exception('Unable to save log entry: invalid response');
+        // TODO: validate of saving was successfull
+
+        $logEntry->id = $rawLogEntry['id'];
+        return $logEntry;
+
+
     }
 
     /**
@@ -47,25 +40,20 @@ class LogEndpoint
 
         $uri = '/project/' . $projectId . '/logstreams';
 
-        $request = $this->client->createRequest('GET', $uri);
 
-        $response = $this->client->sendRequest($request);
+        $logStreams = $this->requestCollection($uri);
 
 
-        if (isset($response['data'])) {
+        $result = [];
+        foreach ($logStreams as $logStream) {
 
-            $result = [];
-            foreach ($response['data'] as $logStream) {
-
-                $id = $logStream['id'];
-                if (\is_array($id)) {
-                    $id = $id['id'];
-                }
-                $result[] = new LogStream(new LogStreamId($id), $logStream['name']);
+            $id = $logStream['id'];
+            if (\is_array($id)) {
+                $id = $id['id'];
             }
-
-            return $result;
+            $result[] = new LogStream(new LogStreamId($id), $logStream['name']);
         }
-        throw new \Exception('Unable to get log streams: invalid response');
+
+        return $result;
     }
 }

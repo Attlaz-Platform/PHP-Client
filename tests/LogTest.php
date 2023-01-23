@@ -6,44 +6,48 @@ namespace Attlaz;
 
 use Attlaz\Model\Log\LogEntry;
 use Attlaz\Model\Log\LogStreamId;
+use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
 
 class LogTest extends TestCase
 {
+    private array $endpoints = [
+//        'https://api.attlaz.com',
+//        'https://api.attlaz.com/1.6',
+//        'https://api.attlaz.com/1.7',
+//        'https://api.attlaz.com/1.8',
+'https://api.attlaz.com/1.9',
+//        'https://api.attlaz.com/beta'
+    ];
+
     public function setUp(): void
     {
         parent::setUp();
-        $dotenv = new \Dotenv();
-        $dotenv->load(\dirname(__DIR__));
+        $dotenv = Dotenv::createImmutable(\dirname(__DIR__));
+        $dotenv->load();
     }
 
     public function testWriteItem()
     {
 
-        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
         $client->enableDebug();
 
-        $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
-        ];
-        foreach ($endpoints as $endpoint) {
+
+        foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
 
             $logEntry = new LogEntry(new LogStreamId('test:php-client'), 'TEST API 3 ' . $this->generateRandomString(500), 'info', new \DateTime('now'));
 
-            try {
-                $result = $client->getLogEndpoint()->saveLog($logEntry);
+            //    try {
+            $result = $client->getLogEndpoint()->saveLog($logEntry);
 
-                $this->assertNotEmpty($result->id);
-                var_dump($result);
-            } catch (\Exception $ex) {
-                echo 'Whoops: ' . $ex->getMessage();
-            }
+            $this->assertNotEmpty($result->id);
+            var_dump($result);
+//            } catch (\Exception $ex) {
+//                echo 'Whoops: ' . $ex->getMessage();
+//            }
         }
 
     }

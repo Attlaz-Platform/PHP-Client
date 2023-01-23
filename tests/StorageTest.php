@@ -4,37 +4,39 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Model\StorageItem;
+use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
 
 class StorageTest extends TestCase
 {
+
+    private array $endpoints = ['https://api.attlaz.com/1.9',
+                                //            'https://api.attlaz.com/1.6',
+                                //            'https://api.attlaz.com/1.7',
+                                //            'https://api.attlaz.com/1.8',
+                                //            'https://api.attlaz.com/beta',
+                                //'https://24c4-188-211-160-246.ngrok.io/'
+    ];
+
     public function setUp(): void
     {
         parent::setUp();
-        $dotenv = new \Dotenv();
-        $dotenv->load(\dirname(__DIR__));
+        $dotenv = Dotenv::createImmutable(\dirname(__DIR__));
+        $dotenv->load();
     }
 
     public function testSpecialKeys()
     {
-        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
 //        $client->enableDebug();
 
-        $endpoints = [
-//            'https://api.attlaz.com',
-//            'https://api.attlaz.com/1.6',
-//            'https://api.attlaz.com/1.7',
-//            'https://api.attlaz.com/1.8',
-'https://api.attlaz.com/beta'
-//'https://a395-152-37-83-170.ngrok.io'
-        ];
 
         $keys = [
 //            'testkey',
 '87707-RAX SOFT 200 BLACK TECHNISCHE FICHE - DATASHEET - FICHE SIGNALÉTIQUE.PDF'
         ];
 
-        foreach ($endpoints as $endpoint) {
+        foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
 
@@ -58,17 +60,9 @@ class StorageTest extends TestCase
 
     public function testWriteItem()
     {
-        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
         $client->enableDebug();
 
-        $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta',
-            //'https://24c4-188-211-160-246.ngrok.io/'
-        ];
 
         $values = [
             'randomvalue',
@@ -82,7 +76,7 @@ class StorageTest extends TestCase
             ['a', 'b', 1, 10]
         ];
 
-        foreach ($endpoints as $endpoint) {
+        foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
 
