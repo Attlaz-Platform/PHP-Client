@@ -31,14 +31,14 @@ class Client
     private ?GenericProvider $provider = null;
     private ?AccessToken $accessToken = null;
 
-    private StorageEndpoint|null $storageEndpoint;
-    private LogEndpoint|null $logEndpoint;
-    private ConnectionEndpoint|null $connectionEndpoint;
-    private ProjectEndpoint|null $projectEndpoint;
-    private ProjectEnvironmentEndpoint|null $projectEnvironmentEndpoint;
-    private FlowEndpoint|null $flowEndpoint;
-    private ConfigEndpoint|null $configEndpoint;
-    private DeployEndpoint|null $deployEndpoint;
+    private StorageEndpoint|null $storageEndpoint = null;
+    private LogEndpoint|null $logEndpoint = null;
+    private ConnectionEndpoint|null $connectionEndpoint = null;
+    private ProjectEndpoint|null $projectEndpoint = null;
+    private ProjectEnvironmentEndpoint|null $projectEnvironmentEndpoint = null;
+    private FlowEndpoint|null $flowEndpoint = null;
+    private ConfigEndpoint|null $configEndpoint = null;
+    private DeployEndpoint|null $deployEndpoint = null;
 
     private bool $profileRequests = false;
 
