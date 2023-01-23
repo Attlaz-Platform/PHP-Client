@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Endpoint\ConfigEndpoint;
 use Attlaz\Endpoint\ConnectionEndpoint;
+use Attlaz\Endpoint\DeployEndpoint;
 use Attlaz\Endpoint\FlowEndpoint;
 use Attlaz\Endpoint\LogEndpoint;
 use Attlaz\Endpoint\ProjectEndpoint;
@@ -29,12 +31,14 @@ class Client
     private ?GenericProvider $provider = null;
     private ?AccessToken $accessToken = null;
 
-    private StorageEndpoint $storageEndpoint;
-    private LogEndpoint $logEndpoint;
-    private ConnectionEndpoint $connectionEndpoint;
-    private ProjectEndpoint $projectEndpoint;
-    private ProjectEnvironmentEndpoint $projectEnvironmentEndpoint;
-    private FlowEndpoint $flowEndpoint;
+    private StorageEndpoint|null $storageEndpoint;
+    private LogEndpoint|null $logEndpoint;
+    private ConnectionEndpoint|null $connectionEndpoint;
+    private ProjectEndpoint|null $projectEndpoint;
+    private ProjectEnvironmentEndpoint|null $projectEnvironmentEndpoint;
+    private FlowEndpoint|null $flowEndpoint;
+    private ConfigEndpoint|null $configEndpoint;
+    private DeployEndpoint|null $deployEndpoint;
 
     private bool $profileRequests = false;
 
@@ -52,13 +56,6 @@ class Client
         }
         $this->clientSecret = $clientSecret;
         $this->storeToken = $storeToken;
-
-        $this->storageEndpoint = new StorageEndpoint($this);
-        $this->logEndpoint = new LogEndpoint($this);
-        $this->connectionEndpoint = new ConnectionEndpoint($this);
-        $this->projectEndpoint = new ProjectEndpoint($this);
-        $this->projectEnvironmentEndpoint = new ProjectEnvironmentEndpoint($this);
-        $this->flowEndpoint = new FlowEndpoint($this);
     }
 
     public function setEndPoint(string $endPoint): void
@@ -208,9 +205,6 @@ class Client
     //    }
 
 
-
-
-
     public function getApiVersion(): ?string
     {
         $uri = '/system/health';
@@ -252,31 +246,65 @@ class Client
 
     public function getStorageEndpoint(): StorageEndpoint
     {
+        if ($this->storageEndpoint === null) {
+            $this->storageEndpoint = new StorageEndpoint($this);
+        }
         return $this->storageEndpoint;
     }
 
     public function getLogEndpoint(): LogEndpoint
     {
+        if ($this->logEndpoint === null) {
+            $this->logEndpoint = new LogEndpoint($this);
+        }
         return $this->logEndpoint;
     }
 
     public function getConnectionEndpoint(): ConnectionEndpoint
     {
+        if ($this->connectionEndpoint === null) {
+            $this->connectionEndpoint = new ConnectionEndpoint($this);
+        }
         return $this->connectionEndpoint;
     }
 
     public function getProjectEndpoint(): ProjectEndpoint
     {
+        if ($this->projectEndpoint === null) {
+            $this->projectEndpoint = new ProjectEndpoint($this);
+        }
         return $this->projectEndpoint;
     }
 
     public function getProjectEnvironmentEndpoint(): ProjectEnvironmentEndpoint
     {
+        if ($this->projectEnvironmentEndpoint === null) {
+            $this->projectEnvironmentEndpoint = new ProjectEnvironmentEndpoint($this);
+        }
         return $this->projectEnvironmentEndpoint;
     }
 
     public function getFlowEndpoint(): FlowEndpoint
     {
+        if ($this->flowEndpoint === null) {
+            $this->flowEndpoint = new FlowEndpoint($this);
+        }
         return $this->flowEndpoint;
+    }
+
+    public function getConfigEndpoint(): ConfigEndpoint
+    {
+        if ($this->configEndpoint === null) {
+            $this->configEndpoint = new ConfigEndpoint($this);
+        }
+        return $this->configEndpoint;
+    }
+
+    public function getDeployEndpoint(): DeployEndpoint
+    {
+        if ($this->deployEndpoint === null) {
+            $this->deployEndpoint = new DeployEndpoint($this);
+        }
+        return $this->deployEndpoint;
     }
 }
