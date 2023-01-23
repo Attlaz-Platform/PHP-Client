@@ -5,7 +5,7 @@ namespace Attlaz\Endpoint;
 
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\Flow;
-use Attlaz\Model\RunFlowResult;
+use Attlaz\Model\FlowRunRequestResponse;
 use Attlaz\Model\State;
 
 
@@ -13,7 +13,7 @@ class FlowEndpoint extends Endpoint
 {
 
 
-    public function requestRunFlow(string $flowId, array $arguments = [], string|null $projectEnvironmentId = null): RunFlowResult
+    public function requestRunFlow(string $flowId, array $arguments = [], string|null $projectEnvironmentId = null): FlowRunRequestResponse
     {
         $body = [
             'arguments' => $arguments,
@@ -29,7 +29,7 @@ class FlowEndpoint extends Endpoint
 
         //TODO: validate response & handle issues
         $success = ($response['success'] === true || $response['success'] === 'true');
-        $result = new RunFlowResult($success, $response['flow_run_request']);
+        $result = new FlowRunRequestResponse($success, $response['flow_run_request']);
 
         $resultData = null;
         if (!\is_null($response['result'])) {
