@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Model;
 
-class TaskExecutionResult
+class RunFlowResult
 {
     private bool $success;
     private string $id;

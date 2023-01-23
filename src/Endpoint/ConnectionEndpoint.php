@@ -3,18 +3,12 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
-use Attlaz\Client;
 use Attlaz\Model\AdapterConnection;
 use Attlaz\Model\Exception\RequestException;
 
-class ConnectionEndpoint
+class ConnectionEndpoint extends Endpoint
 {
-    private Client $client;
 
-    public function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
 
     /**
      * @param string $projectId
@@ -25,10 +19,8 @@ class ConnectionEndpoint
     {
         $uri = '/project/' . $projectId . '/connections';
 
-        $request = $this->client->createRequest('GET', $uri);
 
-        $response = $this->client->sendRequest($request);
-        $rawConnections = $response['data'];
+        $rawConnections = $this->requestCollection($uri, null, 'GET');
 
         $connections = [];
         foreach ($rawConnections as $rawConnection) {
@@ -46,15 +38,7 @@ class ConnectionEndpoint
     public function getConnection(string $connectionKey): ?AdapterConnection
     {
         $uri = '/connections/' . $connectionKey;
-
-        $request = $this->client->createRequest('GET', $uri);
-
-        $response = $this->client->sendRequest($request);
-
-        if (isset($response['errors']) && count($response['errors']) > 0) {
-            return null;
-        }
-        $rawConnection = $response['data'];
+        $rawConnection = $this->requestObject($uri);
         return new AdapterConnection($rawConnection);
     }
 }

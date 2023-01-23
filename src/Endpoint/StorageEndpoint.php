@@ -3,18 +3,14 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
-use Attlaz\Client;
+
 use Attlaz\Model\StorageItem;
 use DateTimeInterface;
 
-class StorageEndpoint
-{
-    private Client $client;
 
-    public function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
+class StorageEndpoint extends Endpoint
+{
+
 
     public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): ?StorageItem
     {
@@ -25,23 +21,12 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
 
-        $request = $this->client->createRequest('GET', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+        $rawItem = $this->requestObject($uri);
 
-        if (is_null($rawItem['data'])) {
+        if ($rawItem === null) {
             return null;
         }
-
-        if (isset($rawItem['data']) && isset($rawItem['data']['item'])) {
-            // TODO: remove this fallback to old method once no longer needed
-            $rawItem = $rawItem['data']['item'];
-
-
-        } else {
-            $rawItem = $rawItem['data'];
-        }
-
 
         $item = new StorageItem();
         $item->key = $rawItem['key'];
@@ -95,17 +80,18 @@ class StorageEndpoint
         $data = clone $storageItem;
         $data->value = $this->freezeValue($data->value);
 
-        $request = $this->client->createRequest('POST', $uri, $data);
 
-        $rawResult = $this->client->sendRequest($request);
+        $rawResult = $this->requestObject($uri, $data, 'POST');
 
-        if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
-            return $rawResult['data']['success'];
-        }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
-        }
-        throw new \Exception('Invalid response');
+//        if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
+//            return $rawResult['data']['success'];
+//        }
+//        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
+//            return false;
+//        }
+//        throw new \Exception('Invalid response');
+
+        return true;
     }
 
     /**
@@ -119,9 +105,8 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items';
         }
 
-        $request = $this->client->createRequest('GET', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+        $rawItem = $this->requestObject($uri);
 
         if (isset($rawItem['data']) && isset($rawItem['data']['item_keys'])) {
             // TODO: remove this fallback to old method once no longer needed
@@ -140,9 +125,8 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
 
-        $request = $this->client->createRequest('DELETE', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+        $rawItem = $this->requestObject($uri, null, 'DELETE');
 
         if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
             return $rawItem['data']['success'];
@@ -169,9 +153,8 @@ class StorageEndpoint
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
 
-        $request = $this->client->createRequest('GET', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+        $rawItem = $this->requestCollection($uri);
 
         if (\is_null($rawItem['data'])) {
             throw new \Exception('Invalid response');
@@ -199,9 +182,8 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
         }
 
-        $request = $this->client->createRequest('DELETE', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+        $rawItem = $this->requestObject($uri, null, 'DELETE');
 
         if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
             return $rawItem['data']['success'];

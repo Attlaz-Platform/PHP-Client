@@ -1,0 +1,53 @@
+<?php
+declare(strict_types=1);
+
+namespace Attlaz\Endpoint;
+
+use Attlaz\Model\Config;
+use Attlaz\Model\Exception\RequestException;
+
+
+class ConfigEndpoint extends Endpoint
+{
+
+
+    /**
+     * @param string $projectId
+     * @param int|null $projectEnvironmentId
+     * @return Config[]
+     * @throws RequestException
+     */
+    public function getConfigByProject(string $projectId, string|null $projectEnvironmentId = null): array
+    {
+        $uri = '/projects/' . $projectId . '/config';
+
+        if (!\is_null($projectEnvironmentId)) {
+            $uri = $uri . '?environment=' . $projectEnvironmentId;
+        }
+
+
+        $rawConfigValues = $this->requestCollection($uri);
+        $result = [];
+
+
+        foreach ($rawConfigValues as $rawConfigValue) {
+            $configValue = new Config();
+            $configValue->id = $rawConfigValue['id'];
+            $configValue->inheritable = $rawConfigValue['inheritable'];
+            $configValue->sensitive = $rawConfigValue['sensitive'];
+            $configValue->state = $rawConfigValue['state'];
+            $configValue->project = $rawConfigValue['project'];
+            $configValue->projectEnvironment = $rawConfigValue['project_environment'];
+
+
+            $configValue->key = $rawConfigValue['key'];
+            $configValue->value = $rawConfigValue['value'];
+
+            $result[] = $configValue;
+        }
+
+
+        return $result;
+    }
+
+}

@@ -4,15 +4,13 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Endpoint\ConnectionEndpoint;
+use Attlaz\Endpoint\FlowEndpoint;
 use Attlaz\Endpoint\LogEndpoint;
+use Attlaz\Endpoint\ProjectEndpoint;
+use Attlaz\Endpoint\ProjectEnvironmentEndpoint;
 use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
-use Attlaz\Model\Config;
 use Attlaz\Model\Exception\RequestException;
-use Attlaz\Model\Project;
-use Attlaz\Model\ProjectEnvironment;
-use Attlaz\Model\Task;
-use Attlaz\Model\TaskExecutionResult;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
@@ -34,6 +32,9 @@ class Client
     private StorageEndpoint $storageEndpoint;
     private LogEndpoint $logEndpoint;
     private ConnectionEndpoint $connectionEndpoint;
+    private ProjectEndpoint $projectEndpoint;
+    private ProjectEnvironmentEndpoint $projectEnvironmentEndpoint;
+    private FlowEndpoint $flowEndpoint;
 
     private bool $profileRequests = false;
 
@@ -55,6 +56,9 @@ class Client
         $this->storageEndpoint = new StorageEndpoint($this);
         $this->logEndpoint = new LogEndpoint($this);
         $this->connectionEndpoint = new ConnectionEndpoint($this);
+        $this->projectEndpoint = new ProjectEndpoint($this);
+        $this->projectEnvironmentEndpoint = new ProjectEnvironmentEndpoint($this);
+        $this->flowEndpoint = new FlowEndpoint($this);
     }
 
     public function setEndPoint(string $endPoint): void
@@ -124,16 +128,15 @@ class Client
         $this->timeout = $timeout;
     }
 
-    public function createRequest(string $method, string $uri, $body = null): RequestInterface
+    public function createRequest(string $method, string $uri, array|object|null $body = null): RequestInterface
     {
         $this->authenticate();
         if (\is_null($this->provider) || \is_null($this->accessToken)) {
             throw new \Exception('Unable to create request: not authenticated');
         }
         $options = [];
-        if (!\is_null($body)) {
-            $body = \json_encode($body);
-            $options['body'] = $body;
+        if ($body !== null) {
+            $options['body'] = \json_encode($body);
         }
 
         $options['headers'] = ['Content-Type' => 'application/json'];
@@ -203,328 +206,10 @@ class Client
     //
     //        return $result;
     //    }
-    public function scheduleProjectTask(string $projectKey, string $taskKey, array $arguments = []): TaskExecutionResult
-    {
-        throw new \Exception('Not implemented');
-    }
 
-    public function requestTaskExecution(
-        string $taskId,
-        array  $arguments = [],
-        string $projectEnvironmentId = null
-    )
-    {
-        $body = [
-            'arguments' => $arguments,
-        ];
-        if (!\is_null($projectEnvironmentId)) {
-            $body['projectEnvironment'] = $projectEnvironmentId;
-        }
 
-        $uri = '/tasks/' . $taskId . '/taskexecutionrequests';
 
-        $request = $this->createRequest('POST', $uri, $body);
 
-        $response = $this->sendRequest($request);
-
-        //TODO: validate response & handle issues
-        $success = ($response['success'] === true || $response['success'] === 'true');
-
-        $result = new TaskExecutionResult($success, $response['taskExecutionRequest']);
-
-        $resultData = null;
-        if (!\is_null($response['result'])) {
-            try {
-                $resultData = $response['result']['data'];
-            } catch (\Error $error) {
-                throw new \Exception('Unable to parse task schedule response: ' . $error->getMessage());
-            }
-        }
-
-        $result->result = $resultData;
-
-        return $result;
-    }
-
-    /** @deprecated */
-    public function scheduleTask(
-        string $taskId,
-        array  $arguments = [],
-        string $projectEnvironmentId = null
-    ): TaskExecutionResult
-    {
-        return $this->requestTaskExecution($taskId, $arguments, $projectEnvironmentId);
-    }
-
-    /**
-     * @param string $projectId
-     * @return Task[]
-     * @throws RequestException
-     */
-    public function getTasks(string $projectId): array
-    {
-        $uri = '/projects/' . $projectId . '/tasks';
-
-        $request = $this->createRequest('GET', $uri);
-
-        $rawTasks = $this->sendRequest($request);
-        if (isset($rawTasks['data'])) {
-            $rawTasks = $rawTasks['data'];
-        }
-        $tasks = [];
-        if (!\is_null($rawTasks)) {
-            foreach ($rawTasks as $rawTask) {
-                $task = new Task();
-                $task->id = $rawTask['id'];
-                $task->key = $rawTask['key'];
-                $task->name = $rawTask['name'];
-                $task->description = $rawTask['description'];
-                $task->project = $this->getProjectIdFromRawValue($rawTask);
-
-                if (isset($rawTask['isDirect'])) {
-                    $task->direct = $rawTask['isDirect'];
-                } else {
-                    $task->direct = $rawTask['direct'];
-                }
-                $task->state = $rawTask['state'];
-
-
-                $tasks[] = $task;
-            }
-        }
-
-        return $tasks;
-    }
-
-    public function createTaskExecution(string $taskId, string $projectEnvironmentId): string
-    {
-        $body = null;
-
-        $uri = '/tasks/' . $taskId . '/executions?environment=' . $projectEnvironmentId;
-
-        $request = $this->createRequest('POST', $uri, $body);
-
-        $response = $this->sendRequest($request);
-
-        if (isset($response['id']) && !empty($response['id'])) {
-            return $response['id'];
-        }
-
-        throw new \Exception('Unable to create task execution');
-    }
-
-    public function getTaskExecution(string $taskExecutionId): ?array
-    {
-        $uri = '/taskexecutions/' . $taskExecutionId . '/summaries';
-        //TODO: handle when no execution is found
-        $request = $this->createRequest('GET', $uri);
-
-        return $this->sendRequest($request);
-    }
-
-    public function updateTaskExecution(string $taskExecutionId, string $status, int $time = null): void
-    {
-        $body = [
-            'status' => $status,
-            'time'   => $time,
-        ];
-
-        $uri = '/taskexecutions/' . $taskExecutionId;
-
-        $request = $this->createRequest('POST', $uri, $body);
-
-        $response = $this->sendRequest($request);
-    }
-
-    /**
-     * @param string $projectId
-     * @param int|null $projectEnvironmentId
-     * @return Config[]
-     * @throws RequestException
-     */
-    public function getConfigByProject(string $projectId, string $projectEnvironmentId = null): array
-    {
-        $uri = '/projects/' . $projectId . '/config';
-
-        if (!\is_null($projectEnvironmentId)) {
-            $uri = $uri . '?environment=' . $projectEnvironmentId;
-        }
-
-        $request = $this->createRequest('GET', $uri);
-
-        $rawConfigValues = $this->sendRequest($request);
-        $result = [];
-
-        if (!\is_null($rawConfigValues) && \is_iterable($rawConfigValues)) {
-            foreach ($rawConfigValues as $rawConfigValue) {
-                $configValue = new Config();
-                $configValue->id = $rawConfigValue['id'];
-                $configValue->inheritable = $rawConfigValue['inheritable'];
-                $configValue->sensitive = $rawConfigValue['sensitive'];
-                $configValue->state = $rawConfigValue['state'];
-                $configValue->project = $this->getProjectIdFromRawValue($rawConfigValue);
-                $configValue->projectEnvironment = $this->getProjectEnvironmentIdFromRawValue($rawConfigValue);
-
-
-                $configValue->key = $rawConfigValue['key'];
-                $configValue->value = $rawConfigValue['value'];
-
-                $result[] = $configValue;
-            }
-        }
-
-        return $result;
-    }
-
-    private function getProjectIdFromRawValue(array $rawValue): string
-    {
-        $tries = ['project', 'project_id', 'projectId'];
-        foreach ($tries as $try) {
-            if (isset($rawValue[$try])) {
-                return $rawValue[$try];
-            }
-        }
-        throw new \Error('Project not found in raw value');
-    }
-
-    private function getProjectEnvironmentIdFromRawValue(array $rawValue): string
-    {
-        $tries = ['project_environment', 'project_environment_id', 'projectEnvironment', 'projectEnvironmentId'];
-        foreach ($tries as $try) {
-            if (isset($rawValue[$try])) {
-                return $rawValue[$try];
-            }
-        }
-        throw new \Error('Project environment not found in raw value');
-    }
-
-
-    public function getProjectById(string $projectId): Project
-    {
-        $uri = '/projects/' . $projectId;
-        $request = $this->createRequest('GET', $uri);
-        $rawProject = $this->sendRequest($request);
-        if ($rawProject === null) {
-        throw new \Exception('No project with id "' . $projectId . '" found');
-    }
-        return $this->parseProject($rawProject);
-    }
-
-    public function getProjectEnvironmentById(string $projectEnvironmentId): ProjectEnvironment
-    {
-        $uri = '/projectenvironments/' . $projectEnvironmentId;
-
-        $request = $this->createRequest('GET', $uri);
-
-        //TODO: handle when environment is not found
-        $rawEnvironment = $this->sendRequest($request);
-
-        return $this->parseProjectEnvironment($rawEnvironment);
-    }
-
-    private function parseProject(array $rawProject): Project
-    {
-
-        $project = new Project();
-        $project->id = $rawProject['id'];
-        $project->key = $rawProject['key'];
-        $project->name = $rawProject['name'];
-
-        if (isset($rawProject['team'])) {
-            $project->team = $rawProject['team'];
-        } else {
-            $project->team = $rawProject['teamId'];
-        }
-        $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
-        $project->state = $rawProject['state'];
-
-        return $project;
-    }
-
-    private function parseProjectEnvironment(array $rawEnvironment): ProjectEnvironment
-    {
-        $projectEnvironment = new ProjectEnvironment();
-        $projectEnvironment->id = (string)$rawEnvironment['id'];
-        $projectEnvironment->key = $rawEnvironment['key'];
-        $projectEnvironment->name = $rawEnvironment['name'];
-        $projectEnvironment->projectId = $rawEnvironment['projectId'];
-        $projectEnvironment->isLocal = $rawEnvironment['isLocal'];
-
-        return $projectEnvironment;
-    }
-
-    public function requestDeploy(string $projectEnvironmentId): int
-    {
-        $uri = '/projectenvironments/' . $projectEnvironmentId . '/deploys';
-
-        $request = $this->createRequest('POST', $uri);
-
-        $rawDeploy = $this->sendRequest($request);
-
-        if (!\is_null($rawDeploy) && isset($rawDeploy['id'])) {
-            return $rawDeploy['id'];
-        }
-        throw new \Exception('Something went wrong');
-    }
-
-    public function getProjectEnvironmentByKey(string $projectId, string $projectEnvironmentKey): ProjectEnvironment
-    {
-        //TODO: handle when environment is not found
-        $projectEnvironments = $this->getProjectEnvironments($projectId);
-        foreach ($projectEnvironments as $projectEnvironment) {
-            if ($projectEnvironment->key === $projectEnvironmentKey) {
-                return $projectEnvironment;
-            }
-        }
-
-        throw new \Exception('No project environment with key "' . $projectEnvironmentKey . '" found');
-    }
-
-    /**
-     * @return Project[]
-     * @throws RequestException
-     */
-    public function getProjects(): array
-    {
-        $uri = '/projects/';
-
-        $projects = [];
-        $request = $this->createRequest('GET', $uri);
-
-        $rawProjects = $this->sendRequest($request);
-        if (isset($rawProjects['data'])) {
-            $rawProjects = $rawProjects['data'];
-        }
-        foreach ($rawProjects as $rawProject) {
-            $projects[] = $this->parseProject($rawProject);
-        }
-
-        return $projects;
-    }
-
-    /**
-     * @param string $projectId
-     * @return ProjectEnvironment[]
-     * @throws RequestException
-     */
-    public function getProjectEnvironments(string $projectId): array
-    {
-        $uri = '/projects/' . $projectId . '/environments';
-
-        $request = $this->createRequest('GET', $uri);
-
-        $projectEnvironments = [];
-        //TODO: handle when environment is not found
-        $rawEnvironments = $this->sendRequest($request);
-        if (isset($rawEnvironments['data'])) {
-            $rawEnvironments = $rawEnvironments['data'];
-        }
-        foreach ($rawEnvironments as $rawEnvironment) {
-            $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
-        }
-
-        return $projectEnvironments;
-    }
 
     public function getApiVersion(): ?string
     {
@@ -578,5 +263,20 @@ class Client
     public function getConnectionEndpoint(): ConnectionEndpoint
     {
         return $this->connectionEndpoint;
+    }
+
+    public function getProjectEndpoint(): ProjectEndpoint
+    {
+        return $this->projectEndpoint;
+    }
+
+    public function getProjectEnvironmentEndpoint(): ProjectEnvironmentEndpoint
+    {
+        return $this->projectEnvironmentEndpoint;
+    }
+
+    public function getFlowEndpoint(): FlowEndpoint
+    {
+        return $this->flowEndpoint;
     }
 }
