@@ -8,7 +8,7 @@ class Project
     public string $id;
     public string $key;
     public string $name;
-    public $team;
+    public string $workspaceId;
     public string $defaultEnvironmentId;
-    public $state;
+    public State $state;
 }

@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace Attlaz\Model;
 
-class ProjectEnvironment
+class Flow
 {
-
     public string $id;
     public string $key;
     public string $name;
-    public string $projectId;
-    public bool $isLocal;
+    public string $description;
     public State $state;
+    public bool $isDirect;
+    public string $projectId;
 }
