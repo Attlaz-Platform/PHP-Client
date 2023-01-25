@@ -8,7 +8,7 @@ use Attlaz\Model\LogEntry;
 
 class LogEndpoint
 {
-    /** @var Client  */
+    /** @var Client */
     private $client;
 
     public function __construct(Client $client)
@@ -27,10 +27,8 @@ class LogEndpoint
         $response = $this->client->sendRequest($request);
 
 
-        if (isset($response['data'])) {
-            // TODO: validate of saving was successfull
-            $savedEntry = $response['data'];
-            $logEntry->id = $savedEntry['id'];
+        if (isset($response['id'])) {
+            $logEntry->id = $response['id'];
             return $logEntry;
         }
         throw new \Exception('Unable to save log entry: invalid response');

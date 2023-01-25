@@ -198,7 +198,7 @@ class Client
             $body['projectEnvironment'] = $projectEnvironmentId;
         }
 
-        $uri = '/tasks/' . $taskId . '/taskexecutionrequests';
+        $uri = '/flows/' . $taskId . '/flowrunrequests';
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -206,7 +206,8 @@ class Client
 
         //TODO: validate response & handle issues
         $success = ($response['success'] === true || $response['success'] === 'true');
-
+        var_dump($response);
+        die('---');
         $result = new TaskExecutionResult($success, $response['taskExecutionRequest']);
 
         $resultData = null;
@@ -240,36 +241,36 @@ class Client
      */
     public function getTasks(string $projectId): array
     {
-        $uri = '/projects/' . $projectId . '/tasks';
+        $uri = '/projects/' . $projectId . '/flows';
 
         $request = $this->createRequest('GET', $uri);
 
-        $rawTasks = $this->sendRequest($request);
+        $rawFlows = $this->sendRequest($request);
 
-        $tasks = [];
-        if (!\is_null($rawTasks)) {
-            foreach ($rawTasks as $rawTask) {
-                $task = new Task();
-                $task->id = $rawTask['id'];
-                $task->key = $rawTask['key'];
-                $task->name = $rawTask['name'];
-                $task->description = $rawTask['description'];
-                $task->project = $rawTask['project'];
-                $task->state = $rawTask['state'];
-                $task->direct = $rawTask['direct'];
+        $flows = [];
+        if (!\is_null($rawFlows)) {
+            foreach ($rawFlows as $rawFlow) {
+                $flow = new Task();
+                $flow->id = $rawFlow['id'];
+                $flow->key = $rawFlow['key'];
+                $flow->name = $rawFlow['name'];
+                $flow->description = $rawFlow['description'];
+                $flow->project = $rawFlow['project'];
+                $flow->state = $rawFlow['state'];
+                $flow->direct = $rawFlow['direct'];
 
-                $tasks[] = $task;
+                $flows[] = $flow;
             }
         }
 
-        return $tasks;
+        return $flows;
     }
 
-    public function createTaskExecution(string $taskId, string $projectEnvironmentId): string
+    public function createTaskExecution(string $flowId, string $projectEnvironmentId): string
     {
         $body = null;
 
-        $uri = '/tasks/' . $taskId . '/executions?environment=' . $projectEnvironmentId;
+        $uri = '/flows/' . $flowId . '/runs?environment=' . $projectEnvironmentId;
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -284,7 +285,7 @@ class Client
 
     public function getTaskExecution(string $taskExecutionId): ?array
     {
-        $uri = '/taskexecutions/' . $taskExecutionId . '/summaries';
+        $uri = '/flowruns/' . $taskExecutionId . '/summaries';
         //TODO: handle when no execution is found
         $request = $this->createRequest('GET', $uri);
 
@@ -300,7 +301,7 @@ class Client
             'time'   => $time,
         ];
 
-        $uri = '/taskexecutions/' . $taskExecutionId . '';
+        $uri = '/flowruns/' . $taskExecutionId . '';
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -315,15 +316,16 @@ class Client
      */
     public function getConfigByProject(string $projectId, string $projectEnvironmentId = null): array
     {
-        $uri = '/projects/' . $projectId . '/config';
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/configvalues';
 
-        if (!\is_null($projectEnvironmentId)) {
-            $uri = $uri . '?environment=' . $projectEnvironmentId;
-        }
+//        if (!\is_null($projectEnvironmentId)) {
+//            $uri = $uri . '?environment=' . $projectEnvironmentId;
+//        }
 
         $request = $this->createRequest('GET', $uri);
 
         $rawConfigValues = $this->sendRequest($request);
+        $rawConfigValues = $rawConfigValues['data'];
         $result = [];
 
         if (!\is_null($rawConfigValues) && \is_iterable($rawConfigValues)) {
@@ -334,7 +336,7 @@ class Client
                 $configValue->sensitive = $rawConfigValue['sensitive'];
                 $configValue->state = $rawConfigValue['state'];
                 $configValue->project = $rawConfigValue['project'];
-                $configValue->projectEnvironment = (string)$rawConfigValue['projectEnvironment'];
+                $configValue->projectEnvironment = (string)$rawConfigValue['project_environment'];
                 $configValue->key = $rawConfigValue['key'];
                 $configValue->value = $rawConfigValue['value'];
 
@@ -371,13 +373,12 @@ class Client
 
     private function parseProject(array $rawProject): Project
     {
-
         $project = new Project();
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
-        $project->team = $rawProject['team'];
-        $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
+        $project->team = $rawProject['workspace'];
+        $project->defaultEnvironmentId = $rawProject['default_environment'];
         $project->state = $rawProject['state'];
 
         return $project;
@@ -389,8 +390,8 @@ class Client
         $projectEnvironment->id = (string)$rawEnvironment['id'];
         $projectEnvironment->key = $rawEnvironment['key'];
         $projectEnvironment->name = $rawEnvironment['name'];
-        $projectEnvironment->projectId = $rawEnvironment['projectId'];
-        $projectEnvironment->isLocal = $rawEnvironment['isLocal'];
+        $projectEnvironment->projectId = $rawEnvironment['project'];
+        $projectEnvironment->isLocal = $rawEnvironment['is_local'];
 
         return $projectEnvironment;
     }
@@ -434,6 +435,7 @@ class Client
         $request = $this->createRequest('GET', $uri);
 
         $rawProjects = $this->sendRequest($request);
+        $rawProjects = $rawProjects['data'];
         foreach ($rawProjects as $rawProject) {
             $project = $this->parseProject($rawProject);
             $projects[] = $project;
@@ -456,6 +458,7 @@ class Client
         $projectEnvironments = [];
         //TODO: handle when environment is not found
         $rawEnvironments = $this->sendRequest($request);
+        $rawEnvironments = $rawEnvironments['data'];
         foreach ($rawEnvironments as $rawEnvironment) {
             $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
         }

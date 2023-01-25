@@ -191,12 +191,15 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
-            return $rawItem['data']['success'];
+        if (isset($rawItem['deleted'])) {
+            return $rawItem['deleted'];
         }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
-        }
+//        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
+//            return $rawItem['data']['success'];
+//        }
+//        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
+//            return false;
+//        }
         throw new \Exception('Invalid response');
     }
 }
