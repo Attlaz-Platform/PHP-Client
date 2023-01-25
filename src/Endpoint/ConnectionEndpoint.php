@@ -54,7 +54,7 @@ class ConnectionEndpoint
         if (isset($response['errors']) && count($response['errors']) > 0) {
             return null;
         }
-        $rawConnection = $response['data'];
+        $rawConnection = $response;
         return new AdapterConnection($rawConnection);
     }
 }
