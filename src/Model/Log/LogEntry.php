@@ -36,12 +36,12 @@ class LogEntry implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'logStream' => $this->logStreamId->__toString(),
-            'date'      => $this->date->format(DateTimeInterface::RFC3339_EXTENDED),
-            'level'     => $this->level,
-            'message'   => $this->message,
-            'context'   => $this->context,
-            'tags'      => $this->tags,
+            'log_stream' => $this->logStreamId->__toString(),
+            'date'       => $this->date->format(DateTimeInterface::RFC3339_EXTENDED),
+            'level'      => $this->level,
+            'message'    => $this->message,
+            'context'    => $this->context,
+            'tags'       => $this->tags,
         ];
     }
 }

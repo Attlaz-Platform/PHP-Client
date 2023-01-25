@@ -6,7 +6,7 @@ namespace Attlaz\Model;
 class Config
 {
 
-    public int $id;
+    public string $id;
     public bool $inheritable;
     public bool $sensitive;
     public $state;

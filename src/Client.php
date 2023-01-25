@@ -295,7 +295,7 @@ class Client
     {
         $body = null;
 
-        $uri = '/tasks/' . $taskId . '/executions?environment=' . $projectEnvironmentId;
+        $uri = '/flows/' . $taskId . '/runs?environment=' . $projectEnvironmentId;
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -310,7 +310,7 @@ class Client
 
     public function getTaskExecution(string $taskExecutionId): ?array
     {
-        $uri = '/taskexecutions/' . $taskExecutionId . '/summaries';
+        $uri = '/flowruns/' . $taskExecutionId . '/summaries';
         //TODO: handle when no execution is found
         $request = $this->createRequest('GET', $uri);
 
@@ -324,7 +324,7 @@ class Client
             'time'   => $time,
         ];
 
-        $uri = '/taskexecutions/' . $taskExecutionId;
+        $uri = '/flowruns/' . $taskExecutionId;
 
         $request = $this->createRequest('POST', $uri, $body);
 
@@ -339,7 +339,7 @@ class Client
      */
     public function getConfigByProject(string $projectId, string $projectEnvironmentId = null): array
     {
-        $uri = '/projectenvironments/' . $projectId . '/configvalues';
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/configvalues';
 
 //        if (!\is_null($projectEnvironmentId)) {
 //            $uri = $uri . '?environment=' . $projectEnvironmentId;
@@ -348,12 +348,14 @@ class Client
         $request = $this->createRequest('GET', $uri);
 
         $rawConfigValues = $this->sendRequest($request);
+
+        $rawConfigValues = $rawConfigValues['data'];
         $result = [];
 
         if (!\is_null($rawConfigValues) && \is_iterable($rawConfigValues)) {
             foreach ($rawConfigValues as $rawConfigValue) {
                 $configValue = new Config();
-                $configValue->id = $rawConfigValue['id'];
+                $configValue->id = (string)$rawConfigValue['id'];
                 $configValue->inheritable = $rawConfigValue['inheritable'];
                 $configValue->sensitive = $rawConfigValue['sensitive'];
                 $configValue->state = $rawConfigValue['state'];
