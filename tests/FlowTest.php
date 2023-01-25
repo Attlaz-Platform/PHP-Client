@@ -18,18 +18,19 @@ class FlowTest extends TestCase
     {
 
         $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//            'https://api.attlaz.com/beta'
+'https://55af-188-211-160-246.ngrok.io'
         ];
         foreach ($endpoints as $endpoint) {
             $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'), true);
             $client->setEndPoint($endpoint);
 
 
-            $result = $client->requestTaskExecution('E823A9A83');
+            $result = $client->requestTaskExecution('123JKhnLyN5nS4eY9GD2JhEbEbm', ['message' => 'blaat']);
             var_dump($result);
         }
 //        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
@@ -48,14 +49,15 @@ class FlowTest extends TestCase
 //            'https://api.attlaz.com/1.6',
 //            'https://api.attlaz.com/1.7',
 //            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+//'https://api.attlaz.com/beta'
+'https://55af-188-211-160-246.ngrok.io'
         ];
         foreach ($endpoints as $endpoint) {
             $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'), true);
             $client->setEndPoint($endpoint);
             //    $client->enableDebug();
             //
-            $result = $client->requestTaskExecution('C55B0E4CB', [], '55');
+            $result = $client->requestTaskExecution('123JKhnLyN5nS4eY9GD2JhEbEbm', ['message' => 'test'], '0liREOSzIzzqY2tIiSA71ZWKArz');
 
             $this->assertTrue($result->isSuccess());
 //            var_dump($result);

@@ -25,8 +25,8 @@ class StorageTest extends TestCase
 //            'https://api.attlaz.com/1.6',
 //            'https://api.attlaz.com/1.7',
 //            'https://api.attlaz.com/1.8',
-'https://api.attlaz.com/beta'
-//'https://a395-152-37-83-170.ngrok.io'
+//'https://api.attlaz.com/1.9'
+'https://55af-188-211-160-246.ngrok.io'
         ];
 
         $keys = [
@@ -41,19 +41,51 @@ class StorageTest extends TestCase
             foreach ($keys as $key) {
 
 
-                $randomValue = 'randomkey-' . \rand();
+                $randomValue = 'randomvalueforkey-' . \mt_rand();
                 $item = new StorageItem();
                 $item->key = $key;
                 $item->value = $randomValue;
-                $set = $client->getStorageEndpoint()->setItem('61', 'cache', $item);
+
+                $set = $client->getStorageEndpoint()->setItem('0liREOSzIzzqY2tIiSA71ZWKArz', 'cache', $item);
                 $this->assertTrue($set);
 
-                $v = $client->getStorageEndpoint()->getItem('61', 'cache', $item->key);
+                $responseItem = $client->getStorageEndpoint()->getItem('0liREOSzIzzqY2tIiSA71ZWKArz', 'cache', $item->key);
 
-                $this->assertEquals($randomValue, $v->value);
-                $this->assertEquals($item->value, $v->value);
+                $this->assertEquals($item->key, $responseItem->key);
+                $this->assertEquals($randomValue, $responseItem->value);
+                $this->assertEquals($item->value, $responseItem->value);
             }
         }
+    }
+
+    public function testHasItem()
+    {
+        $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
+        $client->enableDebug();
+
+        $endpoints = [
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//'https://api.attlaz.com/1.9',
+//            'https://api.attlaz.com/beta',
+'https://55af-188-211-160-246.ngrok.io'
+        ];
+        foreach ($endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
+
+
+            $hasItem = $client->getStorageEndpoint()->hasItem('0liREOSzIzzqY2tIiSA71ZWKArz', 'cache', 'nonexisting-' . rand());
+            $this->assertFalse($hasItem);
+
+            $nonExistingItem = $client->getStorageEndpoint()->getItem('0liREOSzIzzqY2tIiSA71ZWKArz', 'cache', 'nonexisting-' . rand());
+
+            $this->assertNull($nonExistingItem);
+
+
+        }
+
     }
 
     public function testWriteItem()
@@ -62,12 +94,13 @@ class StorageTest extends TestCase
         $client->enableDebug();
 
         $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta',
-            //'https://24c4-188-211-160-246.ngrok.io/'
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//'https://api.attlaz.com/1.9',
+//            'https://api.attlaz.com/beta',
+'https://55af-188-211-160-246.ngrok.io'
         ];
 
         $values = [
@@ -92,12 +125,12 @@ class StorageTest extends TestCase
                 $item = new StorageItem();
                 $item->key = 'randomkey-' . \rand();
                 $item->value = $value;
-                $set = $client->getStorageEndpoint()->setItem('61', 'cache', $item);
+                $set = $client->getStorageEndpoint()->setItem('0liREOSzIzzqY2tIiSA71ZWKArz', 'cache', $item);
                 $this->assertTrue($set);
 
-                $v = $client->getStorageEndpoint()->getItem('61', 'cache', $item->key);
+                $v = $client->getStorageEndpoint()->getItem('0liREOSzIzzqY2tIiSA71ZWKArz', 'cache', $item->key);
 
-
+                $this->assertEquals($item->key, $v->key);
                 $this->assertEquals($item->value, $v->value);
             }
         }

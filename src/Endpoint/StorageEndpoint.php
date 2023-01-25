@@ -4,12 +4,13 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 use Attlaz\Client;
+use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
-use DateTimeInterface;
 
 class StorageEndpoint
 {
-    private Client $client;
+    /** @var Client */
+    private $client;
 
     public function __construct(Client $client)
     {
@@ -25,32 +26,36 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
 
-        $request = $this->client->createRequest('GET', $uri);
+        try {
+            $request = $this->client->createRequest('GET', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+            $rawItem = $this->client->sendRequest($request);
 
-        if (is_null($rawItem['data'])) {
-            return null;
+//            if (isset($rawItem['data']) && isset($rawItem['data']['item'])) {
+//                $rawItem = $rawItem['data']['item'];
+
+
+            $item = new StorageItem();
+            $item->key = $rawItem['key'];
+            $item->value = $this->thawValue($rawItem['value']);
+
+            if ($rawItem['expiration'] !== null) {
+                $item->expiration = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
+            }
+            return $item;
+
+//            }
+        } catch (RequestException $ex) {
+
+
+            if (strpos($ex->getMessage(), '"type":"Not Found"') !== false) {
+                return null;
+            }
+            throw  $ex;
         }
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['item'])) {
-            // TODO: remove this fallback to old method once no longer needed
-            $rawItem = $rawItem['data']['item'];
 
-
-        } else {
-            $rawItem = $rawItem['data'];
-        }
-
-
-        $item = new StorageItem();
-        $item->key = $rawItem['key'];
-        $item->value = $this->thawValue($rawItem['value']);
-
-        if ($rawItem['expiration'] !== null) {
-            $rawItem['expiration'] = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
-        }
-        return $item;
+        return null;
     }
 
     public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
@@ -92,18 +97,16 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
         }
 
-        $data = clone $storageItem;
-        $data->value = $this->freezeValue($data->value);
+        $itemToSave = clone $storageItem;
 
-        $request = $this->client->createRequest('POST', $uri, $data);
+        $itemToSave->value = $this->freezeValue($storageItem->value);
+
+        $request = $this->client->createRequest('POST', $uri, $itemToSave);
 
         $rawResult = $this->client->sendRequest($request);
 
-        if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
-            return $rawResult['data']['success'];
-        }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
+        if (isset($rawResult['key'])) {
+            return true;
         }
         throw new \Exception('Invalid response');
     }
@@ -123,21 +126,20 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['item_keys'])) {
-            // TODO: remove this fallback to old method once no longer needed
-            return $rawItem['data']['item_keys'];
+        if (isset($rawItem['data']) && isset($rawItem['data'])) {
+            return $rawItem['data'];
+
         }
-        return $rawItem['data'];
 
         throw new \Exception('Invalid response');
     }
 
-    public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
+    public function deleteItem(string $projectEnvironmentId, string $storageType, string $key, ?string $poolKey = null): bool
     {
         if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $storageItemKey;
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $key;
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $key;
         }
 
         $request = $this->client->createRequest('DELETE', $uri);
@@ -153,11 +155,11 @@ class StorageEndpoint
         throw new \Exception('Invalid response');
     }
 
-    public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, ?string $poolKey = null): array
+    public function deleteItems(string $projectEnvironmentId, string $storageType, array $keys, ?string $poolKey = null): array
     {
         $result = [];
-        foreach ($storageItemKeys as $storageItemKey) {
-            $result[$storageItemKey] = $this->deleteItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey);
+        foreach ($keys as $key) {
+            $result[$key] = $this->deleteItem($projectEnvironmentId, $storageType, $key, $poolKey);
         }
         return $result;
     }
@@ -173,22 +175,17 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (\is_null($rawItem['data'])) {
-            throw new \Exception('Invalid response');
-        }
-
-        $rawPools = $rawItem['data'];
         if (isset($rawItem['data']) && isset($rawItem['data']['pools'])) {
-            // TODO: remove this fallback to old method once no longer needed
             $rawPools = $rawItem['data']['pools'];
-
+            $result = [];
+            foreach ($rawPools as $rawPool) {
+                $result[] = $rawPool['name'];
+            }
+            return $result;
 
         }
-        $result = [];
-        foreach ($rawPools as $rawPool) {
-            $result[] = $rawPool['name'];
-        }
-        return $result;
+
+        throw new \Exception('Invalid response');
     }
 
     public function clearPool(string $projectEnvironmentId, string $storageType, ?string $poolKey = null): bool
@@ -203,12 +200,15 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
-            return $rawItem['data']['success'];
+        if (isset($rawItem['deleted'])) {
+            return $rawItem['deleted'];
         }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
-        }
+//        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
+//            return $rawItem['data']['success'];
+//        }
+//        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
+//            return false;
+//        }
         throw new \Exception('Invalid response');
     }
 }

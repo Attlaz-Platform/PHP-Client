@@ -20,28 +20,29 @@ class ClientTest extends TestCase
         $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
 //        $client->enableDebug();
         $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//            'https://api.attlaz.com/beta'
+'https://55af-188-211-160-246.ngrok.io'
         ];
         foreach ($endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $project = $client->getProjectById('0DF2CCCDF');
-            $this->assertEquals('0DF2CCCDF', $project->id);
-            $this->assertEquals('webshop', $project->key);
-            $this->assertEquals('verlichting', $project->team);
+            $project = $client->getProjectById('1dHTsCjE5x2SZbSaq6TDDvKQUZC');
+            $this->assertEquals('1dHTsCjE5x2SZbSaq6TDDvKQUZC', $project->id);
+            $this->assertEquals('echron', $project->key);
+            $this->assertEquals('1krQ3RecRdB379qgcjU5XVXczOA', $project->team);
 
-            $projectEnvironment = $client->getProjectEnvironmentByKey('0DF2CCCDF', 'production');
-            $this->assertEquals('0DF2CCCDF', $projectEnvironment->projectId);
-            $this->assertEquals('61', $projectEnvironment->id);
+            $projectEnvironment = $client->getProjectEnvironmentByKey('1dHTsCjE5x2SZbSaq6TDDvKQUZC', '0liREOSzIzzqY2tIiSA71ZWKArz');
+            $this->assertEquals('1dHTsCjE5x2SZbSaq6TDDvKQUZC', $projectEnvironment->projectId);
+            $this->assertEquals('0liREOSzIzzqY2tIiSA71ZWKArz', $projectEnvironment->id);
             $this->assertEquals('production', $projectEnvironment->key);
 
-            $projectEnvironments = $client->getProjectEnvironments('0DF2CCCDF');
+            $projectEnvironments = $client->getProjectEnvironments('1dHTsCjE5x2SZbSaq6TDDvKQUZC');
             foreach ($projectEnvironments as $projectEnvironment) {
-                $this->assertEquals('0DF2CCCDF', $projectEnvironment->projectId);
+                $this->assertEquals('1dHTsCjE5x2SZbSaq6TDDvKQUZC', $projectEnvironment->projectId);
             }
         }
 
@@ -54,19 +55,20 @@ class ClientTest extends TestCase
         $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
 //        $client->enableDebug();
         $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//            'https://api.attlaz.com/beta'
+'https://55af-188-211-160-246.ngrok.io'
         ];
         foreach ($endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $projectEnvironments = $client->getProjectEnvironments('0DF2CCCDF');
+            $projectEnvironments = $client->getProjectEnvironments('1dHTsCjE5x2SZbSaq6TDDvKQUZC');
 
 
-            $this->assertCount(3, $projectEnvironments);
+            $this->assertCount(2, $projectEnvironments);
         }
     }
 
@@ -76,11 +78,12 @@ class ClientTest extends TestCase
         $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
 //        $client->enableDebug();
         $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//            'https://api.attlaz.com/beta'
+'https://55af-188-211-160-246.ngrok.io'
         ];
         foreach ($endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
@@ -98,19 +101,20 @@ class ClientTest extends TestCase
         $client = new Client(\getenv('api_client_id'), \getenv('api_client_secret'));
 //        $client->enableDebug();
         $endpoints = [
-            'https://api.attlaz.com',
-            'https://api.attlaz.com/1.6',
-            'https://api.attlaz.com/1.7',
-            'https://api.attlaz.com/1.8',
-            'https://api.attlaz.com/beta'
+//            'https://api.attlaz.com',
+//            'https://api.attlaz.com/1.6',
+//            'https://api.attlaz.com/1.7',
+//            'https://api.attlaz.com/1.8',
+//            'https://api.attlaz.com/beta'
+'https://55af-188-211-160-246.ngrok.io'
         ];
         foreach ($endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $flows = $client->getTasks('0DF2CCCDF');
+            $flows = $client->getTasks('1dHTsCjE5x2SZbSaq6TDDvKQUZC');
 
 
-            $this->assertCount(6, $flows);
+            $this->assertCount(10, $flows);
         }
     }
 }

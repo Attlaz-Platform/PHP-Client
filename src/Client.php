@@ -218,19 +218,19 @@ class Client
             'arguments' => $arguments,
         ];
         if (!\is_null($projectEnvironmentId)) {
-            $body['projectEnvironment'] = $projectEnvironmentId;
+            $body['project_environment'] = $projectEnvironmentId;
         }
 
-        $uri = '/tasks/' . $taskId . '/taskexecutionrequests';
+        $uri = '/flows/' . $taskId . '/flowrunrequests';
 
         $request = $this->createRequest('POST', $uri, $body);
 
         $response = $this->sendRequest($request);
-
+//        var_dump($response);
         //TODO: validate response & handle issues
         $success = ($response['success'] === true || $response['success'] === 'true');
 
-        $result = new TaskExecutionResult($success, $response['taskExecutionRequest']);
+        $result = new TaskExecutionResult($success, $response['flow_run_request']);
 
         $resultData = null;
         if (!\is_null($response['result'])) {
@@ -263,7 +263,7 @@ class Client
      */
     public function getTasks(string $projectId): array
     {
-        $uri = '/projects/' . $projectId . '/tasks';
+        $uri = '/projects/' . $projectId . '/flows';
 
         $request = $this->createRequest('GET', $uri);
 
@@ -280,12 +280,7 @@ class Client
                 $task->name = $rawTask['name'];
                 $task->description = $rawTask['description'];
                 $task->project = $this->getProjectIdFromRawValue($rawTask);
-
-                if (isset($rawTask['isDirect'])) {
-                    $task->direct = $rawTask['isDirect'];
-                } else {
-                    $task->direct = $rawTask['direct'];
-                }
+                $task->direct = $rawTask['is_direct'];
                 $task->state = $rawTask['state'];
 
 
@@ -344,11 +339,11 @@ class Client
      */
     public function getConfigByProject(string $projectId, string $projectEnvironmentId = null): array
     {
-        $uri = '/projects/' . $projectId . '/config';
+        $uri = '/projectenvironments/' . $projectId . '/configvalues';
 
-        if (!\is_null($projectEnvironmentId)) {
-            $uri = $uri . '?environment=' . $projectEnvironmentId;
-        }
+//        if (!\is_null($projectEnvironmentId)) {
+//            $uri = $uri . '?environment=' . $projectEnvironmentId;
+//        }
 
         $request = $this->createRequest('GET', $uri);
 
@@ -405,8 +400,8 @@ class Client
         $request = $this->createRequest('GET', $uri);
         $rawProject = $this->sendRequest($request);
         if ($rawProject === null) {
-        throw new \Exception('No project with id "' . $projectId . '" found');
-    }
+            throw new \Exception('No project with id "' . $projectId . '" found');
+        }
         return $this->parseProject($rawProject);
     }
 
@@ -429,13 +424,8 @@ class Client
         $project->id = $rawProject['id'];
         $project->key = $rawProject['key'];
         $project->name = $rawProject['name'];
-
-        if (isset($rawProject['team'])) {
-            $project->team = $rawProject['team'];
-        } else {
-            $project->team = $rawProject['teamId'];
-        }
-        $project->defaultEnvironmentId = $rawProject['defaultEnvironmentId'];
+        $project->team = $rawProject['workspace'];
+        $project->defaultEnvironmentId = $rawProject['default_environment'];
         $project->state = $rawProject['state'];
 
         return $project;
@@ -447,8 +437,8 @@ class Client
         $projectEnvironment->id = (string)$rawEnvironment['id'];
         $projectEnvironment->key = $rawEnvironment['key'];
         $projectEnvironment->name = $rawEnvironment['name'];
-        $projectEnvironment->projectId = $rawEnvironment['projectId'];
-        $projectEnvironment->isLocal = $rawEnvironment['isLocal'];
+        $projectEnvironment->projectId = $rawEnvironment['project'];
+        $projectEnvironment->isLocal = $rawEnvironment['is_local'];
 
         return $projectEnvironment;
     }

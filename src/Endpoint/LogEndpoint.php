@@ -28,10 +28,10 @@ class LogEndpoint
         $response = $this->client->sendRequest($request);
 
 
-        if (isset($response['data'])) {
+        if (isset($response['id'])) {
             // TODO: validate of saving was successfull
-            $savedEntry = $response['data'];
-            $logEntry->id = $savedEntry['id'];
+//            $savedEntry = $response['data'];
+            $logEntry->id = $response['id'];
             return $logEntry;
         }
         throw new \Exception('Unable to save log entry: invalid response');
