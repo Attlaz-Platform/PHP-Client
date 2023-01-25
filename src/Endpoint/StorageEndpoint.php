@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 use Attlaz\Client;
+use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
 
 class StorageEndpoint
@@ -25,12 +26,13 @@ class StorageEndpoint
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
 
-        $request = $this->client->createRequest('GET', $uri);
+        try {
+            $request = $this->client->createRequest('GET', $uri);
 
-        $rawItem = $this->client->sendRequest($request);
+            $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['item'])) {
-            $rawItem = $rawItem['data']['item'];
+//            if (isset($rawItem['data']) && isset($rawItem['data']['item'])) {
+//                $rawItem = $rawItem['data']['item'];
 
 
             $item = new StorageItem();
@@ -38,11 +40,18 @@ class StorageEndpoint
             $item->value = $this->thawValue($rawItem['value']);
 
             if ($rawItem['expiration'] !== null) {
-                $rawItem['expiration'] = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
+                $item->expiration = \DateTime::createFromFormat(\DateTime::RFC3339_EXTENDED, $rawItem['expiration']);
             }
             return $item;
 
+//            }
+        } catch (RequestException $ex) {
+            if ($ex->getCode() === 404) {
+                return null;
+            }
+            throw  $ex;
         }
+
 
         return null;
     }
@@ -89,15 +98,12 @@ class StorageEndpoint
 
         $storageItem->value = $this->freezeValue($storageItem->value);
 
-        $request = $this->client->createRequest('POST', $uri, ['storage_item' => $storageItem]);
+        $request = $this->client->createRequest('POST', $uri, [$storageItem]);
 
         $rawResult = $this->client->sendRequest($request);
 
-        if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
-            return $rawResult['data']['success'];
-        }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
+        if (isset($rawResult['key'])) {
+            return true;
         }
         throw new \Exception('Invalid response');
     }
@@ -117,8 +123,8 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['item_keys'])) {
-            return $rawItem['data']['item_keys'];
+        if (isset($rawItem['data']) && isset($rawItem['data'])) {
+            return $rawItem['data'];
 
         }
 
