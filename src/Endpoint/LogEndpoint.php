@@ -38,7 +38,7 @@ class LogEndpoint extends Endpoint
     public function getLogStreams(string $projectId): array
     {
 
-        $uri = '/project/' . $projectId . '/logstreams';
+        $uri = '/projects/' . $projectId . '/logstreams';
 
 
         $logStreams = $this->requestCollection($uri);
