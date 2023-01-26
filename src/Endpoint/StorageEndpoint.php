@@ -128,11 +128,8 @@ class StorageEndpoint extends Endpoint
 
         $rawItem = $this->requestObject($uri, null, 'DELETE');
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
-            return $rawItem['data']['success'];
-        }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
+        if (isset($rawItem['deleted'])) {
+            return $rawItem['deleted'];
         }
         throw new \Exception('Invalid response');
     }
@@ -154,19 +151,14 @@ class StorageEndpoint extends Endpoint
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
 
 
-        $rawItem = $this->requestCollection($uri);
+        $rawItem = $this->requestObject($uri);
 
-        if (\is_null($rawItem['data'])) {
+        if (\is_null($rawItem['pools'])) {
             throw new \Exception('Invalid response');
         }
 
-        $rawPools = $rawItem['data'];
-        if (isset($rawItem['data']) && isset($rawItem['data']['pools'])) {
-            // TODO: remove this fallback to old method once no longer needed
-            $rawPools = $rawItem['data']['pools'];
+        $rawPools = $rawItem['pools'];
 
-
-        }
         $result = [];
         foreach ($rawPools as $rawPool) {
             $result[] = $rawPool['name'];
@@ -185,12 +177,11 @@ class StorageEndpoint extends Endpoint
 
         $rawItem = $this->requestObject($uri, null, 'DELETE');
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
-            return $rawItem['data']['success'];
+
+        if (isset($rawItem['deleted'])) {
+            return $rawItem['deleted'];
         }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
-        }
+
         throw new \Exception('Invalid response');
     }
 }
