@@ -46,7 +46,9 @@ class StorageEndpoint
 
 //            }
         } catch (RequestException $ex) {
-            if ($ex->getCode() === 404) {
+
+
+            if (strpos($ex->getMessage(), '"type":"Not Found"') !== false) {
                 return null;
             }
             throw  $ex;
