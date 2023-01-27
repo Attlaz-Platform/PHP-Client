@@ -97,4 +97,20 @@ class StorageTest extends TestCase
         }
 
     }
+
+    public function testGetPoolKeys()
+    {
+        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client->enableDebug();
+
+
+        foreach ($this->endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
+
+
+            $poolKeys = $client->getStorageEndpoint()->getPoolKeys('24sPVYcBQcp7MvAFsF2XHjKMRAc', 'cache');
+            $this->assertTrue(is_array($poolKeys));
+        }
+
+    }
 }
