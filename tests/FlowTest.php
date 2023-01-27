@@ -57,10 +57,13 @@ class FlowTest extends TestCase
             $client->setEndPoint($endpoint);
             //    $client->enableDebug();
             //
-            $result = $client->getFlowEndpoint()->requestRunFlow('C55B0E4CB', [], '55');
+            $input = 'Rand-' . rand(9999999, 9999999999);
+
+            $result = $client->getFlowEndpoint()->requestRunFlow('123JKhnLyN5nS4eY9GD2JhEbEbm', ['message' => $input]);
+
 
             $this->assertTrue($result->isSuccess());
-//            var_dump($result);
+            $this->assertEquals($input, $result->result['message']);
         }
 
     }
