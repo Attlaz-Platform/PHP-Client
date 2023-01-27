@@ -8,7 +8,8 @@ use Attlaz\Model\Exception\RequestException;
 
 class ConnectionEndpoint
 {
-    private Client $client;
+    /** @var Client */
+    private $client;
 
     public function __construct(Client $client)
     {

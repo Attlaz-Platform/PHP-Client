@@ -195,7 +195,7 @@ class Client
             'arguments' => $arguments,
         ];
         if (!\is_null($projectEnvironmentId)) {
-            $body['projectEnvironment'] = $projectEnvironmentId;
+            $body['environment'] = $projectEnvironmentId;
         }
 
         $uri = '/flows/' . $taskId . '/flowrunrequests';
@@ -206,9 +206,7 @@ class Client
 
         //TODO: validate response & handle issues
         $success = ($response['success'] === true || $response['success'] === 'true');
-        var_dump($response);
-        die('---');
-        $result = new TaskExecutionResult($success, $response['taskExecutionRequest']);
+        $result = new TaskExecutionResult($success, $response['flow_run_request']);
 
         $resultData = null;
         if (!\is_null($response['result'])) {
