@@ -17,13 +17,9 @@ class ConfigEndpoint extends Endpoint
      * @return Config[]
      * @throws RequestException
      */
-    public function getConfigByProject(string $projectId, string|null $projectEnvironmentId = null): array
+    public function getConfigByProject(string|null $projectEnvironmentId = null): array
     {
-        $uri = '/projects/' . $projectId . '/config';
-
-        if (!\is_null($projectEnvironmentId)) {
-            $uri = $uri . '?environment=' . $projectEnvironmentId;
-        }
+        $uri = '/projectenvironments/' . $projectEnvironmentId . '/configvalues';
 
 
         $rawConfigValues = $this->requestCollection($uri);
