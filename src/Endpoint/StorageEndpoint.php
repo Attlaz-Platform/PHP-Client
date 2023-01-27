@@ -146,11 +146,8 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['success'])) {
-            return $rawItem['data']['success'];
-        }
-        if (isset($rawResult['errors']) && count($rawResult['errors']) > 0) {
-            return false;
+        if (isset($rawItem['deleted'])) {
+            return $rawItem['deleted'];
         }
         throw new \Exception('Invalid response');
     }
@@ -175,16 +172,17 @@ class StorageEndpoint
 
         $rawItem = $this->client->sendRequest($request);
 
-        if (isset($rawItem['data']) && isset($rawItem['data']['pools'])) {
-            $rawPools = $rawItem['data']['pools'];
-            $result = [];
-            foreach ($rawPools as $rawPool) {
-                $result[] = $rawPool['name'];
-            }
-            return $result;
-
+        if (\is_null($rawItem['pools'])) {
+            throw new \Exception('Invalid response');
         }
 
+        $rawPools = $rawItem['pools'];
+
+        $result = [];
+        foreach ($rawPools as $rawPool) {
+            $result[] = $rawPool['name'];
+        }
+        return $result;
         throw new \Exception('Invalid response');
     }
 
