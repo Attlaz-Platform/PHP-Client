@@ -97,4 +97,22 @@ class StorageTest extends TestCase
         }
 
     }
+
+    public function testGetNonExistingItem()
+    {
+        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client->enableDebug();
+
+
+        foreach ($this->endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
+
+
+            $v = $client->getStorageEndpoint()->getItem('61', 'cache', 'Somenonexistingitem');
+            $this->assertNull($v);
+
+        }
+
+
+    }
 }

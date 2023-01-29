@@ -157,7 +157,11 @@ class Client
 
             $jsonResponse = \json_decode($response->getBody()
                 ->getContents(), true);
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
 
+            $exception = new RequestException($ex->getMessage());
+            $exception->httpCode = $ex->getCode();
+            throw $exception;
         } catch (\Throwable $ex) {
             throw new RequestException($ex->getMessage());
         } finally {

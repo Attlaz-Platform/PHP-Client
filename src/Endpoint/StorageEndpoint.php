@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 
+use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
 use DateTimeInterface;
+use GuzzleHttp\Client;
 
 
 class StorageEndpoint extends Endpoint
@@ -22,20 +24,29 @@ class StorageEndpoint extends Endpoint
         }
 
 
-        $rawItem = $this->requestObject($uri);
+        try {
+            $rawItem = $this->requestObject($uri);
 
-        if ($rawItem === null) {
-            return null;
+            if ($rawItem === null) {
+                return null;
+            }
+
+
+            $item = new StorageItem();
+            $item->key = $rawItem['key'];
+            $item->value = $this->thawValue($rawItem['value']);
+            if ($rawItem['expiration'] !== null) {
+                $item->expiration = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
+            }
+
+            return $item;
+        } catch (RequestException $ex) {
+            if ($ex->httpCode === 404) {
+                return null;
+            }
+            throw  $ex;
         }
 
-        $item = new StorageItem();
-        $item->key = $rawItem['key'];
-        $item->value = $this->thawValue($rawItem['value']);
-
-        if ($rawItem['expiration'] !== null) {
-            $rawItem['expiration'] = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
-        }
-        return $item;
     }
 
     public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
