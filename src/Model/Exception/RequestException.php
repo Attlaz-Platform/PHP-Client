@@ -5,5 +5,7 @@ namespace Attlaz\Model\Exception;
 
 class RequestException extends \Exception
 {
+    public int $httpCode = 0;
+
 
 }

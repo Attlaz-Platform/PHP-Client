@@ -19,7 +19,7 @@ class FlowEndpoint extends Endpoint
             'arguments' => $arguments,
         ];
         if ($projectEnvironmentId !== null) {
-            $body['projectEnvironment'] = $projectEnvironmentId;
+            $body['project_environment'] = $projectEnvironmentId;
         }
 
         $uri = '/flows/' . $flowId . '/flowrunrequests';
