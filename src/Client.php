@@ -13,6 +13,7 @@ use Attlaz\Endpoint\ProjectEnvironmentEndpoint;
 use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Exception\RequestException;
+use GuzzleHttp\Exception\ClientException;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
@@ -157,7 +158,7 @@ class Client
 
             $jsonResponse = \json_decode($response->getBody()
                 ->getContents(), true);
-        } catch (\GuzzleHttp\Exception\ClientException $ex) {
+        } catch (ClientException $ex) {
 
             $exception = new RequestException($ex->getMessage());
             $exception->httpCode = $ex->getCode();
@@ -169,7 +170,7 @@ class Client
                 $seconds = \microtime(true) - $startTime;
 
                 $this->profiles[] = [
-                    'Uri'           => $request->getUri(),
+                    'Uri'           => $request->getUri()->__toString(),
                     'Method'        => $request->getMethod(),
                     'Response code' => $response === null ? '' : $response->getStatusCode(),
                     'Duration'      => $seconds
