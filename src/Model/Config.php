@@ -10,7 +10,7 @@ class Config
     public bool $inheritable;
     public bool $sensitive;
     public $state;
-    public string $project;
+    public ?string $project = null;
     public string $projectEnvironment;
     public string $key;
     public $value;
