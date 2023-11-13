@@ -12,6 +12,11 @@ class AdapterConnection
         $this->data = $data;
     }
 
+    public function getId(): string
+    {
+        return $this->data['id'];
+    }
+
     public function getKey(): string
     {
         return $this->data['key'];
