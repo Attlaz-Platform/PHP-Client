@@ -1,13 +1,14 @@
 # Attlaz PHP Client #
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/attlaz/client.svg)](https://packagist.org/packages/attlaz/client)
+
 [Attlaz](https://attlaz.com) is a cloud-based iPaas (Integration Platform as a Service), automation and data management
 platform.
-[![Latest Stable Version](https://img.shields.io/packagist/v/attlaz/client.svg)](https://packagist.org/packages/attlaz/client)
 
 ## Getting started ## 
 
 ```sh
-composer require composer require attlaz/client
+composer require attlaz/client
 ```
 
 ## Getting Help ##
