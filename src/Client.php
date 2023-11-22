@@ -22,16 +22,17 @@ use Psr\Http\Message\RequestInterface;
 class Client
 {
     private string $endPoint = 'https://api.attlaz.com';
-    private string $clientId;
-    private string $clientSecret;
+    private string|null $clientId = null;
+    private string|null $clientSecret = null;
     private bool $storeToken = false;
     private int $timeout = 20;
+    private int $debugLevel = 0;
+    private bool $profileRequests = false;
+    private array $profiles = [];
+    private GenericProvider $provider;
+    private AccessToken|null $accessToken = null;
 
-    private bool $debug = false;
-
-    private ?GenericProvider $provider = null;
-    private ?AccessToken $accessToken = null;
-
+    /** Endpoints */
     private StorageEndpoint|null $storageEndpoint = null;
     private LogEndpoint|null $logEndpoint = null;
     private ConnectionEndpoint|null $connectionEndpoint = null;
@@ -41,11 +42,28 @@ class Client
     private ConfigEndpoint|null $configEndpoint = null;
     private DeployEndpoint|null $deployEndpoint = null;
 
-    private bool $profileRequests = false;
+    public function __construct()
+    {
+        $this->provider = new GenericProvider([
+            'redirectUri' => 'https://attlaz.com/',
+            'urlAuthorize' => $this->endPoint . '/oauth/authorize',
+            'urlAccessToken' => $this->endPoint . '/oauth/token',
+            'urlResourceOwnerDetails' => $this->endPoint . '/oauth/resource',
+            'base_uri' => $this->endPoint,
+            'timeout' => $this->timeout,
+        ]);
+    }
 
-    private array $profiles = [];
+    public function setEndPoint(string $endPoint): void
+    {
+        if ($endPoint === '') {
+            throw new \InvalidArgumentException('Endpoint cannot be empty');
+        }
+        $this->endPoint = rtrim($endPoint, "/");
+        // TODO: update provider with endpoint
+    }
 
-    public function __construct(string $clientId, string $clientSecret, bool $storeToken = false)
+    public function authWithClient(string $clientId, string $clientSecret, bool $storeToken = false): void
     {
         if (empty($clientId)) {
             throw new \InvalidArgumentException('ClientId cannot be empty');
@@ -59,12 +77,24 @@ class Client
         $this->storeToken = $storeToken;
     }
 
-    public function setEndPoint(string $endPoint): void
+    public function authWithToken(string $token): void
     {
-        if ($endPoint === '') {
-            throw new \InvalidArgumentException('Endpoint cannot be empty');
+        $accessToken = new AccessToken([
+            'access_token' => $token,
+            'expires_in' => null,
+        ]);
+        $this->accessToken = $accessToken;
+    }
+
+    private function isAuthenticated(): bool
+    {
+        if ($this->accessToken === null) {
+            return false;
         }
-        $this->endPoint = rtrim($endPoint, "/");
+        if (empty($this->accessToken->getExpires())) {
+            return true;
+        }
+        return $this->accessToken->hasExpired();
     }
 
     private function authenticate(): void
@@ -72,16 +102,20 @@ class Client
 
 
         try {
-            if (\is_null($this->accessToken) || $this->accessToken->hasExpired()) {
+            if (!$this->isAuthenticated()) {
+                if ($this->clientId === null || $this->clientSecret === null) {
+                    throw new \Exception('Token is expired and no client details are defined');
+                }
+
                 $this->provider = new GenericProvider([
-                    'clientId'                => $this->clientId,
-                    'clientSecret'            => $this->clientSecret,
-                    'redirectUri'             => 'https://attlaz.com/',
-                    'urlAuthorize'            => $this->endPoint . '/oauth/authorize',
-                    'urlAccessToken'          => $this->endPoint . '/oauth/token',
+                    'clientId' => $this->clientId,
+                    'clientSecret' => $this->clientSecret,
+                    'redirectUri' => 'https://attlaz.com/',
+                    'urlAuthorize' => $this->endPoint . '/oauth/authorize',
+                    'urlAccessToken' => $this->endPoint . '/oauth/token',
                     'urlResourceOwnerDetails' => $this->endPoint . '/oauth/resource',
-                    'base_uri'                => $this->endPoint,
-                    'timeout'                 => $this->timeout,
+                    'base_uri' => $this->endPoint,
+                    'timeout' => $this->timeout,
                 ]);
 
                 $accessToken = null;
@@ -89,7 +123,7 @@ class Client
                     $accessToken = TokenStorage::loadAccessToken($this->clientId, $this->clientSecret);
                 }
 
-                if (!\is_null($accessToken)) {
+                if ($accessToken !== null) {
                     $this->accessToken = $accessToken;
                 } else {
                     $this->accessToken = $this->provider->getAccessToken('client_credentials', [
@@ -103,15 +137,15 @@ class Client
         } catch (IdentityProviderException $ex) {
             throw new \Exception('Unable to authenticate: ' . $ex->getMessage());
         } catch (\Throwable $ex) {
-            if ($this->debug) {
-                \var_dump($ex);
-            }
+//            if ($this->d) {
+//                \var_dump($ex);
+//            }
 //            \var_dump($ex);
             throw new \Exception('Unable to authenticate');
         }
     }
 
-    public function getAccessToken(): ?AccessToken
+    public function getAccessToken(): AccessToken|null
     {
         return $this->accessToken;
     }
@@ -129,12 +163,12 @@ class Client
     public function createRequest(string $method, string $uri, array|object|null $body = null): RequestInterface
     {
         $this->authenticate();
-        if (\is_null($this->provider) || \is_null($this->accessToken)) {
+        if ($this->accessToken === null) {
             throw new \Exception('Unable to create request: not authenticated');
         }
         $options = [];
         if ($body !== null) {
-            $options['body'] = \json_encode($body);
+            $options['body'] = \json_encode($body, JSON_THROW_ON_ERROR);
         }
 
         $options['headers'] = ['Content-Type' => 'application/json'];
@@ -153,11 +187,11 @@ class Client
             $startTime = \microtime(true);
 
             $response = $this->provider->getHttpClient()
-                ->send($request, ['debug' => $this->debug]);
+                ->send($request, ['debug' => ($this->debugLevel === 2)]);
 
 
             $jsonResponse = \json_decode($response->getBody()
-                ->getContents(), true);
+                ->getContents(), true, 512, JSON_THROW_ON_ERROR);
         } catch (ClientException $ex) {
 
             $exception = new RequestException($ex->getMessage());
@@ -170,10 +204,10 @@ class Client
                 $seconds = \microtime(true) - $startTime;
 
                 $this->profiles[] = [
-                    'Uri'           => $request->getUri()->__toString(),
-                    'Method'        => $request->getMethod(),
+                    'Uri' => $request->getUri()->__toString(),
+                    'Method' => $request->getMethod(),
                     'Response code' => $response === null ? '' : $response->getStatusCode(),
-                    'Duration'      => $seconds
+                    'Duration' => $seconds,
                 ];
             }
         }
@@ -224,15 +258,11 @@ class Client
         return null;
     }
 
-    public function enableDebug(): void
+    public function setDebug(int $debugLevel): void
     {
-        $this->debug = true;
+        $this->debugLevel = $debugLevel;
     }
 
-    public function disableDebug(): void
-    {
-        $this->debug = false;
-    }
 
     public function enableRequestProfiling(): void
     {

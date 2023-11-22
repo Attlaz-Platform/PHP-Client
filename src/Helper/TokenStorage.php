@@ -37,9 +37,9 @@ class TokenStorage
     {
         return [
             'encrypt_method' => "AES-256-CBC",
-            'key'            => hash('sha256', $clientId . '-' . $clientSecret),
-            'iv'             => substr(hash('sha256', $clientSecret), 0, 16),
-            'file'           => '_token_' . \hash('sha512', $clientId . $clientSecret),
+            'key' => hash('sha256', $clientId . '-' . $clientSecret),
+            'iv' => substr(hash('sha256', $clientSecret), 0, 16),
+            'file' => '_token_' . \hash('sha512', $clientId . $clientSecret),
         ];
     }
 

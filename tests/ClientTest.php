@@ -13,7 +13,7 @@ class ClientTest extends TestCase
 //        'https://api.attlaz.com/1.6',
 //        'https://api.attlaz.com/1.7',
 //        'https://api.attlaz.com/1.8',
-'https://api.attlaz.com/1.9',
+        'https://api.attlaz.com/1.9',
 //        'https://api.attlaz.com/beta'
     ];
 
@@ -27,20 +27,21 @@ class ClientTest extends TestCase
     public function testGet()
     {
 
-        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client = new Client();
+        $client->authWithClient($_ENV['api_client_id'], $_ENV['api_client_secret']);
 //        $client->enableDebug();
 
         foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $project = $client->getProjectEndpoint()->getProjectById('0DF2CCCDF');
-            $this->assertEquals('0DF2CCCDF', $project->id);
+            $project = $client->getProjectEndpoint()->getProjectById('1dCxPOug1npDYEPY7W719a9CszW');
+            $this->assertEquals('1dCxPOug1npDYEPY7W719a9CszW', $project->id);
             $this->assertEquals('webshop', $project->key);
             $this->assertEquals('verlichting', $project->workspaceId);
 
-            $projectEnvironment = $client->getProjectEnvironmentEndpoint()->getProjectEnvironmentByKey('0DF2CCCDF', 'production');
-            $this->assertEquals('0DF2CCCDF', $projectEnvironment->projectId);
-            $this->assertEquals('61', $projectEnvironment->id);
+            $projectEnvironment = $client->getProjectEnvironmentEndpoint()->getProjectEnvironmentByKey('1dCxPOug1npDYEPY7W719a9CszW', '1F6GQAEc8GYLZ5ohnaTudLOL3OG');
+            $this->assertEquals('1dCxPOug1npDYEPY7W719a9CszW', $projectEnvironment->projectId);
+            $this->assertEquals('1F6GQAEc8GYLZ5ohnaTudLOL3OG', $projectEnvironment->id);
             $this->assertEquals('production', $projectEnvironment->key);
 
             $projectEnvironments = $client->getProjectEnvironmentEndpoint()->getProjectEnvironments('0DF2CCCDF');
@@ -55,7 +56,8 @@ class ClientTest extends TestCase
     public function testGetProjectEnvironments()
     {
 
-        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client = new Client();
+        $client->authWithClient($_ENV['api_client_id'], $_ENV['api_client_secret']);
 //        $client->enableDebug();
 
         foreach ($this->endpoints as $endpoint) {
@@ -71,7 +73,8 @@ class ClientTest extends TestCase
     public function testGetProjects()
     {
 
-        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client = new Client();
+        $client->authWithClient($_ENV['api_client_id'], $_ENV['api_client_secret']);
 //        $client->enableDebug();
 
         foreach ($this->endpoints as $endpoint) {
@@ -87,16 +90,17 @@ class ClientTest extends TestCase
     public function testGetFlows()
     {
 
-        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client = new Client();
+        $client->authWithClient($_ENV['api_client_id'], $_ENV['api_client_secret']);
 //        $client->enableDebug();
 
         foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $flows = $client->getFlowEndpoint()->getFlows('0DF2CCCDF');
+            $flows = $client->getFlowEndpoint()->getFlows('1dCxPOug1npDYEPY7W719a9CszW');
 
 
-            $this->assertCount(6, $flows);
+            $this->assertCount(8, $flows);
         }
     }
 }

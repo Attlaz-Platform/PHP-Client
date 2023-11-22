@@ -7,7 +7,6 @@ namespace Attlaz\Endpoint;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
 use DateTimeInterface;
-use GuzzleHttp\Client;
 
 
 class StorageEndpoint extends Endpoint
@@ -54,12 +53,12 @@ class StorageEndpoint extends Endpoint
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey) !== null;
     }
 
-    private function freezeValue($value): array
+    private function freezeValue(mixed $value): array
     {
         return ['method' => 'serialize', 'value' => \serialize($value)];
     }
 
-    public function thawValue(array $input)
+    public function thawValue(array $input): mixed
     {
         if (isset($input['method'])) {
             if (!isset($input['value'])) {
@@ -68,10 +67,8 @@ class StorageEndpoint extends Endpoint
             switch ($input['method']) {
                 case 'serialize':
                     return \unserialize($input['value']);
-                    break;
                 case 'json':
                     return \json_decode($input['value'], true);
-                    break;
                 default:
                     throw new \Exception('Unable to thaw value: method "' . $input['method'] . '" not recognized');
             }
@@ -124,8 +121,6 @@ class StorageEndpoint extends Endpoint
             return $rawItem['data']['item_keys'];
         }
         return $rawItem['data'];
-
-        throw new \Exception('Invalid response');
     }
 
     public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool

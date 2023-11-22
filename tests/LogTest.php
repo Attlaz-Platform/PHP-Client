@@ -16,7 +16,7 @@ class LogTest extends TestCase
 //        'https://api.attlaz.com/1.6',
 //        'https://api.attlaz.com/1.7',
 //        'https://api.attlaz.com/1.8',
-'https://api.attlaz.com/1.9',
+        'https://api.attlaz.com/1.9',
 //        'https://api.attlaz.com/beta'
     ];
 
@@ -30,8 +30,9 @@ class LogTest extends TestCase
     public function testWriteItem()
     {
 
-        $client = new Client($_ENV['api_client_id'], $_ENV['api_client_secret']);
-        $client->enableDebug();
+        $client = new Client();
+        $client->authWithClient($_ENV['api_client_id'], $_ENV['api_client_secret']);
+        $client->setDebug(1);
 
 
         foreach ($this->endpoints as $endpoint) {
@@ -44,7 +45,7 @@ class LogTest extends TestCase
             $result = $client->getLogEndpoint()->saveLog($logEntry);
 
             $this->assertNotEmpty($result->id);
-            var_dump($result);
+
 //            } catch (\Exception $ex) {
 //                echo 'Whoops: ' . $ex->getMessage();
 //            }
@@ -58,7 +59,7 @@ class LogTest extends TestCase
         $charactersLength = strlen($characters);
         $randomString = '';
         for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
+            $randomString .= $characters[random_int(0, $charactersLength - 1)];
         }
 
         return $randomString;

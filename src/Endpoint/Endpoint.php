@@ -45,7 +45,7 @@ abstract class Endpoint
         return $response['data'];
     }
 
-    public function requestObject(string $uri, array|object|null $body = null, string $method = 'GET')
+    public function requestObject(string $uri, array|object|null $body = null, string $method = 'GET'): array
     {
         $request = $this->createRequest($method, $uri, $body);
 

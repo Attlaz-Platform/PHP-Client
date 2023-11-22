@@ -52,9 +52,8 @@ class AdapterConnection
     public function setConfiguration(string $key, string $value): void
     {
         $configurations = $this->data['configuration'];
-        $size = count($configurations);
-        for ($i = 0; $i < $size; ++$i) {
-            if ($configurations[$i]['key'] === $key) {
+        foreach ($configurations as $i => $iValue) {
+            if ($iValue['key'] === $key) {
                 $configurations[$i]['value'] = $value;
 
                 $this->data['configuration'] = $configurations;
