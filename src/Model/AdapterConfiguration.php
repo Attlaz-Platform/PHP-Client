@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Model;
 
-class AdapterConnection
+class AdapterConfiguration
 {
     private array $data;
 
@@ -22,9 +22,9 @@ class AdapterConnection
         return $this->data['key'];
     }
 
-    public function getName(): string
+    public function getType(): string
     {
-        return $this->data['name'];
+        return $this->data['type'];
     }
 
     public function getAdapterId(): string
@@ -32,5 +32,13 @@ class AdapterConnection
         return $this->data['adapter'];
     }
 
+    public function getName(): string
+    {
+        return $this->data['name'];
+    }
 
+    public function getDescription(): string
+    {
+        return $this->data['description'];
+    }
 }

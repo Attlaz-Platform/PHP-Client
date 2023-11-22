@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Model\AdapterConfiguration;
 use Attlaz\Model\AdapterConnection;
 use Attlaz\Model\Exception\RequestException;
 
@@ -31,14 +32,62 @@ class ConnectionEndpoint extends Endpoint
     }
 
     /**
-     * @param string $connectionKey
+     * @param string $connectionId
      * @return AdapterConnection|null
      * @throws RequestException
      */
-    public function getConnection(string $connectionKey): ?AdapterConnection
+    public function getConnection(string $connectionId): AdapterConnection|null
     {
-        $uri = '/connections/' . $connectionKey;
+        $uri = '/connections/' . $connectionId;
         $rawConnection = $this->requestObject($uri);
         return new AdapterConnection($rawConnection);
+    }
+
+    /**
+     * @param string $projectId
+     * @param string $connectionKey
+     * @return AdapterConnection|null
+     */
+    public function getConnectionByKey(string $projectId, string $connectionKey): AdapterConnection|null
+    {
+        $uri = '/projects/' . $projectId . '/connections/' . $connectionKey;
+        $rawConnection = $this->requestObject($uri);
+        return new AdapterConnection($rawConnection);
+    }
+
+    /**
+     * @param string $connectionId
+     * @return AdapterConfiguration[]
+     * @throws \Exception
+     */
+    public function getAdapterConfiguration(string $adapterId): array
+    {
+        $uri = '/adapters/' . $adapterId . '/configuration';
+        $rawConfigurations = $this->requestCollection($uri, null, 'GET');
+
+        $configurations = [];
+        foreach ($rawConfigurations as $rawConfiguration) {
+            $configurations[] = new  AdapterConfiguration($rawConfiguration);
+        }
+
+        return $configurations;
+    }
+
+    /**
+     * @param string $connectionId
+     * @return array
+     * @throws \Exception
+     */
+    public function getConnectionConfiguration(string $connectionId): array
+    {
+        $uri = '/connections/' . $connectionId . '/configuration';
+        $rawConfigurations = $this->requestCollection($uri, null, 'GET');
+
+        $configurations = [];
+        foreach ($rawConfigurations as $rawConfiguration) {
+            $configurations[] = $rawConfiguration;
+        }
+
+        return $configurations;
     }
 }
