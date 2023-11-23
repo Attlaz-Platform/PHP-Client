@@ -5,6 +5,7 @@ namespace Attlaz\Endpoint;
 
 use Attlaz\Model\AdapterConfiguration;
 use Attlaz\Model\AdapterConnection;
+use Attlaz\Model\AdapterConnectionConfigurationValue;
 use Attlaz\Model\Exception\RequestException;
 
 class ConnectionEndpoint extends Endpoint
@@ -56,7 +57,7 @@ class ConnectionEndpoint extends Endpoint
     }
 
     /**
-     * @param string $connectionId
+     * @param string $adapterId
      * @return AdapterConfiguration[]
      * @throws \Exception
      */
@@ -75,17 +76,16 @@ class ConnectionEndpoint extends Endpoint
 
     /**
      * @param string $connectionId
-     * @return array
+     * @return AdapterConnectionConfigurationValue[]
      * @throws \Exception
      */
     public function getConnectionConfiguration(string $connectionId): array
     {
         $uri = '/connections/' . $connectionId . '/configuration';
         $rawConfigurations = $this->requestCollection($uri, null, 'GET');
-
         $configurations = [];
         foreach ($rawConfigurations as $rawConfiguration) {
-            $configurations[] = $rawConfiguration;
+            $configurations[] = new AdapterConnectionConfigurationValue($rawConfiguration);
         }
 
         return $configurations;
