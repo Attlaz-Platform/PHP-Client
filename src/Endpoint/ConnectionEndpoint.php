@@ -19,7 +19,7 @@ class ConnectionEndpoint extends Endpoint
      */
     public function getConnections(string $projectId): array
     {
-        $uri = '/project/' . $projectId . '/connections';
+        $uri = '/projects/' . $projectId . '/connections';
 
 
         $rawConnections = $this->requestCollection($uri, null, 'GET');
@@ -41,6 +41,9 @@ class ConnectionEndpoint extends Endpoint
     {
         $uri = '/connections/' . $connectionId;
         $rawConnection = $this->requestObject($uri);
+        if ($rawConnection === null) {
+            return null;
+        }
         return new AdapterConnection($rawConnection);
     }
 
@@ -53,6 +56,9 @@ class ConnectionEndpoint extends Endpoint
     {
         $uri = '/projects/' . $projectId . '/connections/' . $connectionKey;
         $rawConnection = $this->requestObject($uri);
+        if ($rawConnection === null) {
+            return null;
+        }
         return new AdapterConnection($rawConnection);
     }
 

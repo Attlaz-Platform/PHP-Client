@@ -92,11 +92,13 @@ class FlowEndpoint extends Endpoint
         throw new \Exception('Unable to create flow run');
     }
 
-    public function getFlowRun(string $flowRunId): ?array
+    public function getFlowRun(string $flowRunId): array|null
     {
         $uri = '/flowruns/' . $flowRunId . '/summaries';
+
+        $rawResult = $this->requestObject($uri);
         //TODO: handle when no execution is found
-        return $this->requestObject($uri);
+        return $rawResult;
 
     }
 
@@ -104,7 +106,7 @@ class FlowEndpoint extends Endpoint
     {
         $body = [
             'status' => $status,
-            'time'   => $time,
+            'time' => $time,
         ];
 
         $uri = '/flowruns/' . $flowRunId;
