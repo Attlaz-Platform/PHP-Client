@@ -141,7 +141,7 @@ class Client
 //                \var_dump($ex);
 //            }
 //            \var_dump($ex);
-            throw new \Exception('Unable to authenticate');
+            throw new \Exception('Unable to authenticate: ' . $ex->getMessage());
         }
     }
 
