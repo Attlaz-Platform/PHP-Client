@@ -37,7 +37,7 @@ class ClientTest extends TestCase
             $project = $client->getProjectEndpoint()->getProjectById('1dCxPOug1npDYEPY7W719a9CszW');
             $this->assertEquals('1dCxPOug1npDYEPY7W719a9CszW', $project->id);
             $this->assertEquals('webshop', $project->key);
-            $this->assertEquals('verlichting', $project->workspaceId);
+            $this->assertEquals('0yYdGTNLivhDAha0rnebH9VyFdi', $project->workspaceId);
 
             $projectEnvironment = $client->getProjectEnvironmentEndpoint()->getProjectEnvironmentByKey('1dCxPOug1npDYEPY7W719a9CszW', '1F6GQAEc8GYLZ5ohnaTudLOL3OG');
             $this->assertEquals('1dCxPOug1npDYEPY7W719a9CszW', $projectEnvironment->projectId);

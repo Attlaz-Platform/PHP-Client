@@ -13,8 +13,9 @@ class AuthenticationTest extends TestCase
 //        'https://api.attlaz.com/1.6',
 //        'https://api.attlaz.com/1.7',
 //        'https://api.attlaz.com/1.8',
-        'https://api.attlaz.com/1.9',
+//        'https://api.attlaz.com/1.9',
 //        'https://api.attlaz.com/beta'
+        'https://marginally-smart-rodent.ngrok-free.app',
     ];
 
     public function setUp(): void
@@ -30,12 +31,16 @@ class AuthenticationTest extends TestCase
         $client->authWithToken($_ENV['api_token']);
         $client->setDebug(1);
 
+
         foreach ($this->endpoints as $endpoint) {
-            echo 'Get projects' . PHP_EOL;
+
+
+            //  echo 'Get projects' . PHP_EOL;
             $projects = $client->getProjectEndpoint()->getProjects();
-            foreach ($projects as $project) {
-                echo '- ' . $project->name . PHP_EOL;
-            }
+            $this->assertGreaterThanOrEqual(10, count($projects));
+//            foreach ($projects as $project) {
+//                echo '- ' . $project->name . PHP_EOL;
+//            }
         }
 
     }
@@ -59,33 +64,30 @@ class AuthenticationTest extends TestCase
         foreach ($this->endpoints as $endpoint) {
 
             $client->setEndPoint($endpoint);
-            echo 'Get projects' . PHP_EOL;
+
             $projects = $client->getProjectEndpoint()->getProjects();
-            foreach ($projects as $project) {
-                echo '- ' . $project->name . PHP_EOL;
-            }
-//if (!is_array($arguments)) {
-//    var_dump($arguments);
-//}
+
+            $projectCount = count($projects);
+
             $accessToken = $client->getAccessToken();
-            $secondsToExpireToken = ($accessToken->getExpires() - time());
 
-            $this->assertGreaterThanOrEqual(5, $secondsToExpireToken);
-            echo 'Token expires in ' . $secondsToExpireToken . ' seconds' . PHP_EOL;
-            $secondsToSleep = $secondsToExpireToken + 5;
-            echo 'Sleep ' . $secondsToSleep . ' seconds so the token expires' . PHP_EOL;
+            $token = $client->getAccessTokenEndpoint()->get($accessToken->getToken());
+            $this->assertEquals($accessToken->getToken(), $token['access_token']);
 
-            if ($secondsToSleep > 60) {
-                throw new \Exception('Unable to perform test, make sure this token expires sooner');
-            }
-            sleep($secondsToSleep);
 
-// TODO: how to make sure we have a token that expires in 30 seconds?
-            echo 'Get projects' . PHP_EOL;
-            $projects = $client->getProjectEndpoint()->getProjects();
-            foreach ($projects as $project) {
-                echo '- ' . $project->name . PHP_EOL;
-            }
+            $revoked = $client->getAccessTokenEndpoint()->revoke($accessToken->getToken());
+            $this->assertTrue($revoked);
+
+            $tokenAfterRevocation = $client->getAccessTokenEndpoint()->get($accessToken->getToken());
+            $this->assertNull($tokenAfterRevocation);
+
+            $projects2 = $client->getProjectEndpoint()->getProjects();
+
+            $this->assertCount($projectCount, $projects2);
+
+            $newToken = $client->getAccessToken();
+            $this->assertNotEquals($newToken->getToken(), $accessToken->getToken());
+
         }
     }
 }
