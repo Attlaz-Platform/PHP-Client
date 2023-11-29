@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Endpoint\AccessTokenEndpoint;
 use Attlaz\Endpoint\ConfigEndpoint;
 use Attlaz\Endpoint\ConnectionEndpoint;
 use Attlaz\Endpoint\DeployEndpoint;
+use Attlaz\Endpoint\Endpoint;
 use Attlaz\Endpoint\FlowEndpoint;
 use Attlaz\Endpoint\LogEndpoint;
 use Attlaz\Endpoint\ProjectEndpoint;
@@ -31,16 +33,7 @@ class Client
     private array $profiles = [];
     private GenericProvider $provider;
     private AccessToken|null $accessToken = null;
-
-    /** Endpoints */
-    private StorageEndpoint|null $storageEndpoint = null;
-    private LogEndpoint|null $logEndpoint = null;
-    private ConnectionEndpoint|null $connectionEndpoint = null;
-    private ProjectEndpoint|null $projectEndpoint = null;
-    private ProjectEnvironmentEndpoint|null $projectEnvironmentEndpoint = null;
-    private FlowEndpoint|null $flowEndpoint = null;
-    private ConfigEndpoint|null $configEndpoint = null;
-    private DeployEndpoint|null $deployEndpoint = null;
+    private array $endpoints = [];
 
     public function __construct()
     {
@@ -281,65 +274,60 @@ class Client
 
     public function getStorageEndpoint(): StorageEndpoint
     {
-        if ($this->storageEndpoint === null) {
-            $this->storageEndpoint = new StorageEndpoint($this);
-        }
-        return $this->storageEndpoint;
+        return $this->getEndPoint(StorageEndpoint::class);
     }
 
     public function getLogEndpoint(): LogEndpoint
     {
-        if ($this->logEndpoint === null) {
-            $this->logEndpoint = new LogEndpoint($this);
-        }
-        return $this->logEndpoint;
+        return $this->getEndPoint(LogEndpoint::class);
     }
 
     public function getConnectionEndpoint(): ConnectionEndpoint
     {
-        if ($this->connectionEndpoint === null) {
-            $this->connectionEndpoint = new ConnectionEndpoint($this);
-        }
-        return $this->connectionEndpoint;
+        return $this->getEndPoint(ConnectionEndpoint::class);
     }
 
     public function getProjectEndpoint(): ProjectEndpoint
     {
-        if ($this->projectEndpoint === null) {
-            $this->projectEndpoint = new ProjectEndpoint($this);
-        }
-        return $this->projectEndpoint;
+        return $this->getEndPoint(ProjectEndpoint::class);
     }
 
     public function getProjectEnvironmentEndpoint(): ProjectEnvironmentEndpoint
     {
-        if ($this->projectEnvironmentEndpoint === null) {
-            $this->projectEnvironmentEndpoint = new ProjectEnvironmentEndpoint($this);
-        }
-        return $this->projectEnvironmentEndpoint;
+        return $this->getEndPoint(ProjectEnvironmentEndpoint::class);
     }
 
     public function getFlowEndpoint(): FlowEndpoint
     {
-        if ($this->flowEndpoint === null) {
-            $this->flowEndpoint = new FlowEndpoint($this);
-        }
-        return $this->flowEndpoint;
+        return $this->getEndPoint(FlowEndpoint::class);
     }
 
     public function getConfigEndpoint(): ConfigEndpoint
     {
-        if ($this->configEndpoint === null) {
-            $this->configEndpoint = new ConfigEndpoint($this);
-        }
-        return $this->configEndpoint;
+        return $this->getEndPoint(ConfigEndpoint::class);
     }
 
     public function getDeployEndpoint(): DeployEndpoint
     {
-        if ($this->deployEndpoint === null) {
-            $this->deployEndpoint = new DeployEndpoint($this);
+        return $this->getEndPoint(DeployEndpoint::class);
+    }
+
+    public function getAccessTokenEndpoint(): AccessTokenEndpoint
+    {
+        return $this->getEndPoint(AccessTokenEndpoint::class);
+    }
+
+    /**
+     * @template T
+     * @param class-string<T> $endpointClass
+     * @return T
+     * @throws \Exception
+     */
+    private function getEndPoint(string $endpointClass): Endpoint
+    {
+        if (!array_key_exists($endpointClass, $this->endpoints)) {
+            $this->endpoints[$endpointClass] = new $endpointClass($this);
         }
-        return $this->deployEndpoint;
+        return $this->endpoints[$endpointClass];
     }
 }
