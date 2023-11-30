@@ -179,8 +179,16 @@ class Client
 
             $startTime = \microtime(true);
 
+            $options = [
+                'debug' => ($this->debugLevel === 2),
+                'force_ip_resolve' => 'v4',
+                'curl' => [
+                    CURLOPT_RESOLVE => ['api.attlaz.com:443:174.138.6.248'],
+
+                ],
+            ];
             $response = $this->provider->getHttpClient()
-                ->send($request, ['debug' => ($this->debugLevel === 2)]);
+                ->send($request, $options);
 
 
             $jsonResponse = \json_decode($response->getBody()
