@@ -5,11 +5,8 @@ namespace Attlaz\Model;
 
 class AdapterConnectionConfigurationValue
 {
-    private array $data;
-
-    public function __construct(array $data)
+    public function __construct(private readonly array $data)
     {
-        $this->data = $data;
     }
 
     public function getId(): string
@@ -17,14 +14,14 @@ class AdapterConnectionConfigurationValue
         return $this->data['id'];
     }
 
-    public function getConfigId(): string
+    public function getAdapterConnectionId(): string
     {
-        return $this->data['config'];
+        return $this->data['adapter_connection'];
     }
 
-    public function getConfigKey(): string
+    public function getAdapterConfigurationId(): string
     {
-        return $this->data['config_key'];
+        return $this->data['configuration'];
     }
 
     public function getValue(): mixed
