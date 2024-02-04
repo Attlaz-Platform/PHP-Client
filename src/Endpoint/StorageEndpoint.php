@@ -33,7 +33,11 @@ class StorageEndpoint extends Endpoint
 
             $item = new StorageItem();
             $item->key = $rawItem['key'];
-            $item->value = $this->thawValue($rawItem['value']);
+            if (is_array($rawItem['value'])) {
+                $item->value = $this->thawValue($rawItem['value']);
+            } else {
+                $item->value = $rawItem['value'];
+            }
             if ($rawItem['expiration'] !== null) {
                 $item->expiration = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
             }
@@ -53,9 +57,12 @@ class StorageEndpoint extends Endpoint
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey) !== null;
     }
 
-    private function freezeValue(mixed $value): array
+    private function freezeValue(mixed $value): array|string
     {
-        return ['method' => 'serialize', 'value' => \serialize($value)];
+        if (is_object($value) || is_array($value)) {
+            return ['method' => 'serialize', 'value' => \serialize($value)];
+        }
+        return $value;
     }
 
     public function thawValue(array $input): mixed
