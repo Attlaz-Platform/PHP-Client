@@ -22,7 +22,7 @@ abstract class Endpoint
         return $this->client->createRequest($method, $uri, $body);
     }
 
-    public function requestCollection(string $uri, array|object|null $body = null, string $method = 'GET'): array
+    public function requestCollection(string $uri, array|object|null $body = null, string $method = 'GET', callable|null $parser = null): array
     {
         $request = $this->createRequest($method, $uri, $body);
 
@@ -42,8 +42,21 @@ abstract class Endpoint
 
         $this->parseErrors($response);
 
+        $data = $response['data'];
+        if ($parser === null) {
+            return $data;
+        }
+        return $this->parseCollection($data, $parser);
+    }
 
-        return $response['data'];
+    private function parseCollection(array $data, callable $parser): array
+    {
+        $result = [];
+        foreach ($data as $record) {
+            $result[] = $parser($record);
+        }
+
+        return $result;
     }
 
     public function requestObject(string $uri, array|object|null $body = null, string $method = 'GET'): array|null

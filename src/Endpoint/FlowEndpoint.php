@@ -6,6 +6,7 @@ namespace Attlaz\Endpoint;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\Flow;
 use Attlaz\Model\FlowRunRequestResponse;
+use Attlaz\Model\FlowRunSummary;
 use Attlaz\Model\State;
 
 
@@ -55,25 +56,18 @@ class FlowEndpoint extends Endpoint
     {
         $uri = '/projects/' . $projectId . '/flows';
 
-        $rawFlows = $this->requestCollection($uri);
-
-
-        $flows = [];
-
-        foreach ($rawFlows as $rawFlow) {
+        $parser = function (array $record) {
             $flow = new Flow();
-            $flow->id = $rawFlow['id'];
-            $flow->key = $rawFlow['key'];
-            $flow->name = $rawFlow['name'];
-            $flow->description = $rawFlow['description'] ?? '';
-            $flow->projectId = $rawFlow['project'];
-            $flow->isDirect = $rawFlow['is_direct'];
-            $flow->state = State::from($rawFlow['state']);
-            $flows[] = $flow;
-        }
-
-
-        return $flows;
+            $flow->id = $record['id'];
+            $flow->key = $record['key'];
+            $flow->name = $record['name'];
+            $flow->description = $record['description'] ?? '';
+            $flow->projectId = $record['project'];
+            $flow->isDirect = $record['is_direct'];
+            $flow->state = State::from($record['state']);
+            return $flow;
+        };
+        return $this->requestCollection($uri, null, 'GET', $parser);
     }
 
     public function createFlowRun(string $flowId, string $projectEnvironmentId): string
@@ -100,6 +94,29 @@ class FlowEndpoint extends Endpoint
         //TODO: handle when no execution is found
         return $rawResult;
 
+    }
+
+    /**
+     * @param string $flowRunId
+     * @return FlowRunSummary[]
+     * @throws \Exception
+     */
+    public function getFlowRunSummaries(string $flowRunId): array
+    {
+        $uri = '/flows/' . $flowRunId . '/runsummaries';
+
+        $parser = function ($record) {
+            $flowRunSummary = new FlowRunSummary();
+            $flowRunSummary->id = $record['id'];
+            $flowRunSummary->flowId = $record['flow'];
+            //  $flowRunSummary->name = $record['name'];
+            $flowRunSummary->time = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['time']);
+            $flowRunSummary->runDuration = $record['run_duration'];
+            $flowRunSummary->pendingDuration = $record['pending_duration'];
+            $flowRunSummary->status = $record['status'];
+            return $flowRunSummary;
+        };
+        return $this->requestCollection($uri, null, 'GET', $parser);
     }
 
     public function updateFlowRun(string $flowRunId, string $status, int $time = null): void
