@@ -97,13 +97,13 @@ class FlowEndpoint extends Endpoint
     }
 
     /**
-     * @param string $flowRunId
+     * @param string $flowId
      * @return FlowRunSummary[]
      * @throws \Exception
      */
-    public function getFlowRunSummaries(string $flowRunId): array
+    public function getFlowRunSummaries(string $flowId): array
     {
-        $uri = '/flows/' . $flowRunId . '/runsummaries';
+        $uri = '/flows/' . $flowId . '/runsummaries';
 
         $parser = function ($record) {
             $flowRunSummary = new FlowRunSummary();
