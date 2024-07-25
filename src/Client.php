@@ -12,6 +12,7 @@ use Attlaz\Endpoint\FlowEndpoint;
 use Attlaz\Endpoint\LogEndpoint;
 use Attlaz\Endpoint\ProjectEndpoint;
 use Attlaz\Endpoint\ProjectEnvironmentEndpoint;
+use Attlaz\Endpoint\ServiceEndpoint;
 use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
 use Attlaz\Model\Exception\RequestException;
@@ -79,15 +80,41 @@ class Client
         $this->accessToken = $accessToken;
     }
 
-    private function isAuthenticated(): bool
+    public function setTimeout(int $timeout): void
     {
+        $this->timeout = $timeout;
+    }
+
+    public function getApiVersion(): ?string
+    {
+        $uri = '/system/health';
+
+        $request = $this->createRequest('GET', $uri);
+
+
+        $rawResponse = $this->sendRequest($request);
+        if (isset($rawResponse['version'])) {
+            return $rawResponse['version'];
+        }
+        return null;
+    }
+
+    public function createRequest(string $method, string $uri, array|object|null $body = null): RequestInterface
+    {
+        $this->authenticate();
         if ($this->accessToken === null) {
-            return false;
+            throw new \Exception('Unable to create request: not authenticated');
         }
-        if (empty($this->accessToken->getExpires())) {
-            return true;
+        $options = [];
+        if ($body !== null) {
+            $options['body'] = \json_encode($body, JSON_THROW_ON_ERROR);
         }
-        return $this->accessToken->hasExpired();
+
+        $options['headers'] = ['Content-Type' => 'application/json'];
+
+        $url = $this->endPoint . $uri;
+
+        return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
     }
 
     private function authenticate(): void
@@ -138,6 +165,17 @@ class Client
         }
     }
 
+    private function isAuthenticated(): bool
+    {
+        if ($this->accessToken === null) {
+            return false;
+        }
+        if (empty($this->accessToken->getExpires())) {
+            return true;
+        }
+        return $this->accessToken->hasExpired();
+    }
+
     public function getAccessToken(): AccessToken|null
     {
         return $this->accessToken;
@@ -148,29 +186,33 @@ class Client
         $this->accessToken = $accessToken;
     }
 
-    public function setTimeout(int $timeout): void
-    {
-        $this->timeout = $timeout;
-    }
-
-    public function createRequest(string $method, string $uri, array|object|null $body = null): RequestInterface
-    {
-        $this->authenticate();
-        if ($this->accessToken === null) {
-            throw new \Exception('Unable to create request: not authenticated');
-        }
-        $options = [];
-        if ($body !== null) {
-            $options['body'] = \json_encode($body, JSON_THROW_ON_ERROR);
-        }
-
-        $options['headers'] = ['Content-Type' => 'application/json'];
-
-        $url = $this->endPoint . $uri;
-
-        return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
-    }
-
+    //    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
+    //    {
+    //        $body = [
+    //            'command'   => $command,
+    //            'arguments' => $arguments,
+    //        ];
+    //
+    //        $uri = '/branches/' . $branch . '/taskexecutionrequests';
+    //
+    //        $request = $this->createRequest('POST', $uri, $body);
+    //
+    //        $response = $this->sendRequest($request);
+    //
+    //        //TODO: validate response & handle issues
+    //        $success = ($response['success'] === true || $response['success'] === 'true');
+    //
+    //        $data = null;
+    //        if (isset($response['result']) && !empty($response['result'])) {
+    //            $data = json_decode($response['result'], true);
+    //            $data = $data['data'];
+    //        }
+    //
+    //        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+    //        $result->result = $data;
+    //
+    //        return $result;
+    //    }
 
     public function sendRequest(RequestInterface $request): array
     {
@@ -211,49 +253,6 @@ class Client
         return $jsonResponse;
     }
 
-    //    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
-    //    {
-    //        $body = [
-    //            'command'   => $command,
-    //            'arguments' => $arguments,
-    //        ];
-    //
-    //        $uri = '/branches/' . $branch . '/taskexecutionrequests';
-    //
-    //        $request = $this->createRequest('POST', $uri, $body);
-    //
-    //        $response = $this->sendRequest($request);
-    //
-    //        //TODO: validate response & handle issues
-    //        $success = ($response['success'] === true || $response['success'] === 'true');
-    //
-    //        $data = null;
-    //        if (isset($response['result']) && !empty($response['result'])) {
-    //            $data = json_decode($response['result'], true);
-    //            $data = $data['data'];
-    //        }
-    //
-    //        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
-    //        $result->result = $data;
-    //
-    //        return $result;
-    //    }
-
-
-    public function getApiVersion(): ?string
-    {
-        $uri = '/system/health';
-
-        $request = $this->createRequest('GET', $uri);
-
-
-        $rawResponse = $this->sendRequest($request);
-        if (isset($rawResponse['version'])) {
-            return $rawResponse['version'];
-        }
-        return null;
-    }
-
     public function setDebug(int $debugLevel): void
     {
         $this->debugLevel = $debugLevel;
@@ -278,6 +277,20 @@ class Client
     public function getStorageEndpoint(): StorageEndpoint
     {
         return $this->getEndPoint(StorageEndpoint::class);
+    }
+
+    /**
+     * @template T
+     * @param class-string<T> $endpointClass
+     * @return T
+     * @throws \Exception
+     */
+    private function getEndPoint(string $endpointClass): Endpoint
+    {
+        if (!array_key_exists($endpointClass, $this->endpoints)) {
+            $this->endpoints[$endpointClass] = new $endpointClass($this);
+        }
+        return $this->endpoints[$endpointClass];
     }
 
     public function getLogEndpoint(): LogEndpoint
@@ -320,17 +333,8 @@ class Client
         return $this->getEndPoint(AccessTokenEndpoint::class);
     }
 
-    /**
-     * @template T
-     * @param class-string<T> $endpointClass
-     * @return T
-     * @throws \Exception
-     */
-    private function getEndPoint(string $endpointClass): Endpoint
+    public function getServiceEndpoint(): ServiceEndpoint
     {
-        if (!array_key_exists($endpointClass, $this->endpoints)) {
-            $this->endpoints[$endpointClass] = new $endpointClass($this);
-        }
-        return $this->endpoints[$endpointClass];
+        return $this->getEndPoint(ServiceEndpoint::class);
     }
 }
