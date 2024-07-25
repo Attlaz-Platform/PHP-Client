@@ -32,7 +32,11 @@ class ConfigEndpoint extends Endpoint
             $configValue->inheritable = $rawConfigValue['inheritable'];
             $configValue->sensitive = $rawConfigValue['sensitive'];
             $configValue->state = $rawConfigValue['state'];
-            $configValue->project = $rawConfigValue['project'];
+
+            if ($rawConfigValue['project'] !== null) {
+                $configValue->project = $rawConfigValue['project'];
+            }
+
             $configValue->projectEnvironment = $rawConfigValue['project_environment'];
 
 

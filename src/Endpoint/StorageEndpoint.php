@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 
+use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
 use DateTimeInterface;
 
@@ -22,20 +23,33 @@ class StorageEndpoint extends Endpoint
         }
 
 
-        $rawItem = $this->requestObject($uri);
+        try {
+            $rawItem = $this->requestObject($uri);
 
-        if ($rawItem === null) {
-            return null;
+            if ($rawItem === null) {
+                return null;
+            }
+
+
+            $item = new StorageItem();
+            $item->key = $rawItem['key'];
+            if (is_array($rawItem['value'])) {
+                $item->value = $this->thawValue($rawItem['value']);
+            } else {
+                $item->value = $rawItem['value'];
+            }
+            if ($rawItem['expiration'] !== null) {
+                $item->expiration = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
+            }
+
+            return $item;
+        } catch (RequestException $ex) {
+            if ($ex->httpCode === 404) {
+                return null;
+            }
+            throw  $ex;
         }
 
-        $item = new StorageItem();
-        $item->key = $rawItem['key'];
-        $item->value = $this->thawValue($rawItem['value']);
-
-        if ($rawItem['expiration'] !== null) {
-            $rawItem['expiration'] = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
-        }
-        return $item;
     }
 
     public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
@@ -43,12 +57,15 @@ class StorageEndpoint extends Endpoint
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey) !== null;
     }
 
-    private function freezeValue($value): array
+    private function freezeValue(mixed $value): array|string
     {
-        return ['method' => 'serialize', 'value' => \serialize($value)];
+        if (is_object($value) || is_array($value)) {
+            return ['method' => 'serialize', 'value' => \serialize($value)];
+        }
+        return $value;
     }
 
-    public function thawValue(array $input)
+    public function thawValue(array $input): mixed
     {
         if (isset($input['method'])) {
             if (!isset($input['value'])) {
@@ -57,10 +74,8 @@ class StorageEndpoint extends Endpoint
             switch ($input['method']) {
                 case 'serialize':
                     return \unserialize($input['value']);
-                    break;
                 case 'json':
                     return \json_decode($input['value'], true);
-                    break;
                 default:
                     throw new \Exception('Unable to thaw value: method "' . $input['method'] . '" not recognized');
             }
@@ -113,8 +128,6 @@ class StorageEndpoint extends Endpoint
             return $rawItem['data']['item_keys'];
         }
         return $rawItem['data'];
-
-        throw new \Exception('Invalid response');
     }
 
     public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool

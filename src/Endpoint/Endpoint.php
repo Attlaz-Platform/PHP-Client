@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 use Attlaz\Client;
+use Attlaz\Model\Exception\RequestException;
 use Psr\Http\Message\RequestInterface;
 
 
@@ -21,7 +22,7 @@ abstract class Endpoint
         return $this->client->createRequest($method, $uri, $body);
     }
 
-    public function requestCollection(string $uri, array|object|null $body = null, string $method = 'GET'): array
+    public function requestCollection(string $uri, array|object|null $body = null, string $method = 'GET', callable|null $parser = null): array
     {
         $request = $this->createRequest($method, $uri, $body);
 
@@ -41,15 +42,37 @@ abstract class Endpoint
 
         $this->parseErrors($response);
 
-
-        return $response['data'];
+        $data = $response['data'];
+        if ($parser === null) {
+            return $data;
+        }
+        return $this->parseCollection($data, $parser);
     }
 
-    public function requestObject(string $uri, array|object|null $body = null, string $method = 'GET')
+    private function parseCollection(array $data, callable $parser): array
+    {
+        $result = [];
+        foreach ($data as $record) {
+            $result[] = $parser($record);
+        }
+
+        return $result;
+    }
+
+    public function requestObject(string $uri, array|object|null $body = null, string $method = 'GET'): array|null
     {
         $request = $this->createRequest($method, $uri, $body);
 
-        $response = $this->client->sendRequest($request);
+
+        try {
+            $response = $this->client->sendRequest($request);
+        } catch (RequestException $requestException) {
+
+            if ($requestException->httpCode === 404) {
+                return null;
+            }
+            throw $requestException;
+        }
 
 
         $this->parseErrors($response);

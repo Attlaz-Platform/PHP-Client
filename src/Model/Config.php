@@ -6,11 +6,11 @@ namespace Attlaz\Model;
 class Config
 {
 
-    public int $id;
+    public string $id;
     public bool $inheritable;
     public bool $sensitive;
     public $state;
-    public string $project;
+    public string|null $project = null;
     public string $projectEnvironment;
     public string $key;
     public $value;
