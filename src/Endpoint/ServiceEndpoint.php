@@ -10,9 +10,7 @@ use GuzzleHttp\Client as HttpClient;
 
 class ServiceEndpoint extends Endpoint
 {
-
-
-    public function chatGtp(string $prompt): string
+    public function openAI(string $prompt, string $model = 'gtp-4o'): string
     {
 
         $command = new ServiceCommand();
@@ -20,13 +18,9 @@ class ServiceEndpoint extends Endpoint
         $command->command = 'prompt';
 
         $command->addArgument('prompt', $prompt);
-        $command->addArgument('model', 'gpt-4o');
+        $command->addArgument('model', $model);
 
-
-        $result = $this->sendCommand($command);
-
-//        var_dump($result);
-        return $result;
+        return $this->sendCommand($command);
     }
 
     public function sendCommand(ServiceCommand $command): string
