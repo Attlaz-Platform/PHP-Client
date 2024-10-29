@@ -5,7 +5,6 @@ namespace Attlaz\Endpoint;
 
 
 use Attlaz\Model\Service\ServiceCommand;
-use GuzzleHttp\Client as HttpClient;
 
 
 class ServiceEndpoint extends Endpoint
@@ -23,19 +22,10 @@ class ServiceEndpoint extends Endpoint
         return $this->sendCommand($command);
     }
 
-    public function sendCommand(ServiceCommand $command): string
+    public function sendCommand(ServiceCommand $command): string|array
     {
-        $options = [];
-        $body = \json_encode($command->toJson(), JSON_OBJECT_AS_ARRAY | JSON_THROW_ON_ERROR);
-        $options['body'] = $body;
-        $options['headers'] = ['Content-Type' => 'application/json'];
-
-        $cl = new HttpClient();
-        $resp = $cl->post('https://up-shiner-notably.ngrok-free.app/command', $options);
-
-        $result = json_decode($resp->getBody()->getContents(), true);
-
-//        var_dump($result);
-        return $result['result']['data'];
+        $response = $this->requestObject('https://services.api.attlaz.com/command', $command->toJson(), 'POST');
+        // TODO: validate response
+        return $response['data'];
     }
 }

@@ -112,9 +112,159 @@ class Client
 
         $options['headers'] = ['Content-Type' => 'application/json'];
 
-        $url = $this->endPoint . $uri;
+        if (!str_starts_with($uri, 'https://') && !str_starts_with($uri, 'http://')) {
+            $uri = $this->endPoint . $uri;
+        }
 
-        return $this->provider->getAuthenticatedRequest($method, $url, $this->accessToken, $options);
+
+        return $this->provider->getAuthenticatedRequest($method, $uri, $this->accessToken, $options);
+    }
+
+    public function getAccessToken(): AccessToken|null
+    {
+        return $this->accessToken;
+    }
+
+    public function setAccessToken(AccessToken $accessToken): void
+    {
+        $this->accessToken = $accessToken;
+    }
+
+    public function sendRequest(RequestInterface $request): array
+    {
+        $response = null;
+        try {
+
+            $startTime = \microtime(true);
+
+            $options = [
+                'debug' => ($this->debugLevel === 2),
+            ];
+            $response = $this->provider->getHttpClient()
+                ->send($request, $options);
+
+
+            $jsonResponse = \json_decode($response->getBody()
+                ->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (ClientException $ex) {
+
+            $exception = new RequestException($ex->getMessage());
+            $exception->httpCode = $ex->getCode();
+            throw $exception;
+        } catch (\Throwable $ex) {
+            throw new RequestException($ex->getMessage());
+        } finally {
+            if ($this->profileRequests) {
+                $seconds = \microtime(true) - $startTime;
+
+                $this->profiles[] = [
+                    'Uri' => $request->getUri()->__toString(),
+                    'Method' => $request->getMethod(),
+                    'Response code' => $response === null ? '' : $response->getStatusCode(),
+                    'Duration' => $seconds,
+                ];
+            }
+        }
+
+        return $jsonResponse;
+    }
+
+    public function setDebug(int $debugLevel): void
+    {
+        $this->debugLevel = $debugLevel;
+    }
+
+    //    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
+    //    {
+    //        $body = [
+    //            'command'   => $command,
+    //            'arguments' => $arguments,
+    //        ];
+    //
+    //        $uri = '/branches/' . $branch . '/taskexecutionrequests';
+    //
+    //        $request = $this->createRequest('POST', $uri, $body);
+    //
+    //        $response = $this->sendRequest($request);
+    //
+    //        //TODO: validate response & handle issues
+    //        $success = ($response['success'] === true || $response['success'] === 'true');
+    //
+    //        $data = null;
+    //        if (isset($response['result']) && !empty($response['result'])) {
+    //            $data = json_decode($response['result'], true);
+    //            $data = $data['data'];
+    //        }
+    //
+    //        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
+    //        $result->result = $data;
+    //
+    //        return $result;
+    //    }
+
+    public function enableRequestProfiling(): void
+    {
+        $this->profileRequests = true;
+    }
+
+    public function disableRequestProfiling(): void
+    {
+        $this->profileRequests = false;
+    }
+
+    public function getProfiles(): array
+    {
+        return $this->profiles;
+    }
+
+    public function getStorageEndpoint(): StorageEndpoint
+    {
+        return $this->getEndPoint(StorageEndpoint::class);
+    }
+
+    public function getLogEndpoint(): LogEndpoint
+    {
+        return $this->getEndPoint(LogEndpoint::class);
+    }
+
+    public function getConnectionEndpoint(): ConnectionEndpoint
+    {
+        return $this->getEndPoint(ConnectionEndpoint::class);
+    }
+
+    public function getProjectEndpoint(): ProjectEndpoint
+    {
+        return $this->getEndPoint(ProjectEndpoint::class);
+    }
+
+    public function getProjectEnvironmentEndpoint(): ProjectEnvironmentEndpoint
+    {
+        return $this->getEndPoint(ProjectEnvironmentEndpoint::class);
+    }
+
+    public function getFlowEndpoint(): FlowEndpoint
+    {
+        return $this->getEndPoint(FlowEndpoint::class);
+    }
+
+    public function getConfigEndpoint(): ConfigEndpoint
+    {
+        return $this->getEndPoint(ConfigEndpoint::class);
+    }
+
+    public function getDeployEndpoint(): DeployEndpoint
+    {
+        return $this->getEndPoint(DeployEndpoint::class);
+    }
+
+    public function getAccessTokenEndpoint(): AccessTokenEndpoint
+    {
+        return $this->getEndPoint(AccessTokenEndpoint::class);
+    }
+
+    public function getServiceEndpoint(): ServiceEndpoint
+    {
+        return $this->getEndPoint(ServiceEndpoint::class);
     }
 
     private function authenticate(): void
@@ -176,109 +326,6 @@ class Client
         return $this->accessToken->hasExpired();
     }
 
-    public function getAccessToken(): AccessToken|null
-    {
-        return $this->accessToken;
-    }
-
-    public function setAccessToken(AccessToken $accessToken): void
-    {
-        $this->accessToken = $accessToken;
-    }
-
-    //    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
-    //    {
-    //        $body = [
-    //            'command'   => $command,
-    //            'arguments' => $arguments,
-    //        ];
-    //
-    //        $uri = '/branches/' . $branch . '/taskexecutionrequests';
-    //
-    //        $request = $this->createRequest('POST', $uri, $body);
-    //
-    //        $response = $this->sendRequest($request);
-    //
-    //        //TODO: validate response & handle issues
-    //        $success = ($response['success'] === true || $response['success'] === 'true');
-    //
-    //        $data = null;
-    //        if (isset($response['result']) && !empty($response['result'])) {
-    //            $data = json_decode($response['result'], true);
-    //            $data = $data['data'];
-    //        }
-    //
-    //        $result = new ScheduleTaskResult($success, $response['taskExecutionRequest']);
-    //        $result->result = $data;
-    //
-    //        return $result;
-    //    }
-
-    public function sendRequest(RequestInterface $request): array
-    {
-        $response = null;
-        try {
-
-            $startTime = \microtime(true);
-
-            $options = [
-                'debug' => ($this->debugLevel === 2),
-            ];
-            $response = $this->provider->getHttpClient()
-                ->send($request, $options);
-
-
-            $jsonResponse = \json_decode($response->getBody()
-                ->getContents(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (ClientException $ex) {
-
-            $exception = new RequestException($ex->getMessage());
-            $exception->httpCode = $ex->getCode();
-            throw $exception;
-        } catch (\Throwable $ex) {
-            throw new RequestException($ex->getMessage());
-        } finally {
-            if ($this->profileRequests) {
-                $seconds = \microtime(true) - $startTime;
-
-                $this->profiles[] = [
-                    'Uri' => $request->getUri()->__toString(),
-                    'Method' => $request->getMethod(),
-                    'Response code' => $response === null ? '' : $response->getStatusCode(),
-                    'Duration' => $seconds,
-                ];
-            }
-        }
-
-        return $jsonResponse;
-    }
-
-    public function setDebug(int $debugLevel): void
-    {
-        $this->debugLevel = $debugLevel;
-    }
-
-
-    public function enableRequestProfiling(): void
-    {
-        $this->profileRequests = true;
-    }
-
-    public function disableRequestProfiling(): void
-    {
-        $this->profileRequests = false;
-    }
-
-    public function getProfiles(): array
-    {
-        return $this->profiles;
-    }
-
-    public function getStorageEndpoint(): StorageEndpoint
-    {
-        return $this->getEndPoint(StorageEndpoint::class);
-    }
-
     /**
      * @template T
      * @param class-string<T> $endpointClass
@@ -291,50 +338,5 @@ class Client
             $this->endpoints[$endpointClass] = new $endpointClass($this);
         }
         return $this->endpoints[$endpointClass];
-    }
-
-    public function getLogEndpoint(): LogEndpoint
-    {
-        return $this->getEndPoint(LogEndpoint::class);
-    }
-
-    public function getConnectionEndpoint(): ConnectionEndpoint
-    {
-        return $this->getEndPoint(ConnectionEndpoint::class);
-    }
-
-    public function getProjectEndpoint(): ProjectEndpoint
-    {
-        return $this->getEndPoint(ProjectEndpoint::class);
-    }
-
-    public function getProjectEnvironmentEndpoint(): ProjectEnvironmentEndpoint
-    {
-        return $this->getEndPoint(ProjectEnvironmentEndpoint::class);
-    }
-
-    public function getFlowEndpoint(): FlowEndpoint
-    {
-        return $this->getEndPoint(FlowEndpoint::class);
-    }
-
-    public function getConfigEndpoint(): ConfigEndpoint
-    {
-        return $this->getEndPoint(ConfigEndpoint::class);
-    }
-
-    public function getDeployEndpoint(): DeployEndpoint
-    {
-        return $this->getEndPoint(DeployEndpoint::class);
-    }
-
-    public function getAccessTokenEndpoint(): AccessTokenEndpoint
-    {
-        return $this->getEndPoint(AccessTokenEndpoint::class);
-    }
-
-    public function getServiceEndpoint(): ServiceEndpoint
-    {
-        return $this->getEndPoint(ServiceEndpoint::class);
     }
 }
