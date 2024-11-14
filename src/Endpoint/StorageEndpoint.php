@@ -47,8 +47,7 @@ class StorageEndpoint
 //            }
         } catch (RequestException $ex) {
 
-
-            if (strpos($ex->getMessage(), '"type":"Not Found"') !== false) {
+            if (strpos($ex->getMessage(), 'Not Found') !== false) {
                 return null;
             }
             throw  $ex;
