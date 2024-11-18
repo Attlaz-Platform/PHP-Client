@@ -23,6 +23,7 @@ class ServiceCommand
             'service' => $this->service,
             'command' => $this->command,
             'arguments' => $this->arguments,
+            'version' => '1.0.0',
         ];
     }
 }

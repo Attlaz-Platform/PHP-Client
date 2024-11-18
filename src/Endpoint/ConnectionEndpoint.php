@@ -96,4 +96,21 @@ class ConnectionEndpoint extends Endpoint
 
         return $configurations;
     }
+
+    public function createConnectionEvent(string $adapterConnectionId, string $type): bool
+    {
+
+        $uri = '/adapters/connections/' . $adapterConnectionId . '/events';
+
+        $body = [
+            'type' => $type,
+            'time' => new \DateTime('now'),
+            'data' => null,
+        ];
+        $result = $this->requestObject($uri, $body, 'POST');
+
+        return $result['saved'];
+
+
+    }
 }

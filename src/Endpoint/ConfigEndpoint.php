@@ -28,7 +28,7 @@ class ConfigEndpoint extends Endpoint
 
         foreach ($rawConfigValues as $rawConfigValue) {
             $configValue = new Config();
-            $configValue->id = $rawConfigValue['id'];
+            $configValue->id = (string)$rawConfigValue['id'];
             $configValue->inheritable = $rawConfigValue['inheritable'];
             $configValue->sensitive = $rawConfigValue['sensitive'];
             $configValue->state = $rawConfigValue['state'];
