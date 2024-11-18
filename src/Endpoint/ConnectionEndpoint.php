@@ -99,17 +99,19 @@ class ConnectionEndpoint extends Endpoint
 
     public function createConnectionEvent(string $adapterConnectionId, string $type): bool
     {
-
         $uri = '/adapters/connections/' . $adapterConnectionId . '/events';
 
         $body = [
             'type' => $type,
-            'time' => new \DateTime('now'),
+            'time' => (new \DateTime('now'))->format(\DateTimeInterface::RFC3339_EXTENDED),
             'data' => null,
         ];
         $result = $this->requestObject($uri, $body, 'POST');
 
-        return $result['saved'];
+        if (!isset($result['created'])) {
+            return false;
+        }
+        return (bool)$result['created'];
 
 
     }
