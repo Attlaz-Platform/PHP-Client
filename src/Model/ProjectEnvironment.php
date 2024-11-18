@@ -5,6 +5,8 @@ namespace Attlaz\Model;
 
 class ProjectEnvironment
 {
+    public const TYPE_LOCAL = 'locl';
+
     public string $id;
     public string $key;
     public string $name;
