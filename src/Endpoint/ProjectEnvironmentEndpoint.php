@@ -64,7 +64,7 @@ class ProjectEnvironmentEndpoint extends Endpoint
         $projectEnvironment->key = $rawEnvironment['key'];
         $projectEnvironment->name = $rawEnvironment['name'];
         $projectEnvironment->projectId = $rawEnvironment['project'];
-        $projectEnvironment->isLocal = $rawEnvironment['is_local'];
+        $projectEnvironment->type = $rawEnvironment['type'];
         $projectEnvironment->state = State::from($rawEnvironment['state']);
         return $projectEnvironment;
     }
