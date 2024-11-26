@@ -26,9 +26,10 @@ class FlowEndpoint extends Endpoint
         $uri = '/flows/' . $flowId . '/flowrunrequests';
 
         $response = $this->requestObject($uri, $body, 'POST');
-//        var_dump($response);
 
-        //TODO: validate response & handle issues
+        if (!isset($response['success'])) {
+            throw new \Exception('Unable to parse flow run request response: success property not defined');
+        }
         $success = ($response['success'] === true || $response['success'] === 'true');
         $result = new FlowRunRequestResponse($success, $response['flow_run_request']);
 
@@ -37,7 +38,7 @@ class FlowEndpoint extends Endpoint
             try {
                 $resultData = $response['result']['data'];
             } catch (\Error $error) {
-                throw new \Exception('Unable to parse flow run schedule response: ' . $error->getMessage());
+                throw new \Exception('Unable to parse flow run request response: ' . $error->getMessage());
             }
         }
 
