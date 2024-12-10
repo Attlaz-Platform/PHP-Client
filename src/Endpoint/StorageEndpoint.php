@@ -57,14 +57,6 @@ class StorageEndpoint extends Endpoint
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey) !== null;
     }
 
-    private function freezeValue(mixed $value): array|string
-    {
-        if (is_object($value) || is_array($value)) {
-            return ['method' => 'serialize', 'value' => \serialize($value)];
-        }
-        return $value;
-    }
-
     public function thawValue(array $input): mixed
     {
         if (isset($input['method'])) {
@@ -196,5 +188,17 @@ class StorageEndpoint extends Endpoint
         }
 
         throw new \Exception('Invalid response');
+    }
+
+    private function freezeValue(mixed $value): array|string
+    {
+        // TODO: should there be a way to force php serialisation?
+//        if (is_object($value) || is_array($value)) {
+//            return ['method' => 'serialize', 'value' => \serialize($value)];
+//        }
+        if (is_object($value) || is_array($value)) {
+            return ['method' => 'json', 'value' => json_encode($value)];
+        }
+        return $value;
     }
 }
