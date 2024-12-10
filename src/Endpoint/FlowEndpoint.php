@@ -120,7 +120,7 @@ class FlowEndpoint extends Endpoint
         return $this->requestCollection($uri, null, 'GET', $parser);
     }
 
-    public function updateFlowRun(string $flowRunId, string $status, int $time = null): void
+    public function updateFlowRun(string $flowRunId, string $status, int|null $time = null): void
     {
         $body = [
             'status' => $status,
