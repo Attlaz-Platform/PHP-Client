@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Attlaz;
 
 use Attlaz\Endpoint\AccessTokenEndpoint;
+use Attlaz\Endpoint\CollectionsEndpoint;
 use Attlaz\Endpoint\ConfigEndpoint;
 use Attlaz\Endpoint\ConnectionEndpoint;
 use Attlaz\Endpoint\DeployEndpoint;
@@ -265,6 +266,11 @@ class Client
     public function getServiceEndpoint(): ServiceEndpoint
     {
         return $this->getEndPoint(ServiceEndpoint::class);
+    }
+
+    public function getCollectionsEndpoint(): CollectionsEndpoint
+    {
+        return $this->getEndPoint(CollectionsEndpoint::class);
     }
 
     private function authenticate(): void
