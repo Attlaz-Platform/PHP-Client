@@ -5,12 +5,8 @@ namespace Attlaz\Model\Log;
 
 class LogStreamId
 {
-    private string $id;
-
-
-    public function __construct(string $id)
+    public function __construct(private readonly string $id)
     {
-        $this->id = $id;
     }
 
     public function __toString(): string
