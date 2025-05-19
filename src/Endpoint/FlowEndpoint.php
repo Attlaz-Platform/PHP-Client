@@ -5,8 +5,10 @@ namespace Attlaz\Endpoint;
 
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\Flow;
+use Attlaz\Model\FlowRun;
 use Attlaz\Model\FlowRunRequestResponse;
 use Attlaz\Model\FlowRunSummary;
+use Attlaz\Model\Log\LogStreamId;
 use Attlaz\Model\State;
 
 
@@ -71,7 +73,7 @@ class FlowEndpoint extends Endpoint
         return $this->requestCollection($uri, null, 'GET', $parser);
     }
 
-    public function createFlowRun(string $flowId, string $projectEnvironmentId): string
+    public function createFlowRun(string $flowId, string $projectEnvironmentId): FlowRun
     {
         $body = null;
 
@@ -81,19 +83,43 @@ class FlowEndpoint extends Endpoint
         $response = $this->requestObject($uri, $body, 'POST');
 
         if (isset($response['id']) && !empty($response['id'])) {
-            return $response['id'];
+
+            $flowRun = new FlowRun();
+            $flowRun->id = $response['id'];
+            $flowRun->flowId = $response['request']['flow'];
+            $flowRun->projectEnvironmentId = $response['project_environment'];
+            $flowRun->logStreamId = new LogStreamId($response['request']['log_stream']);
+            $flowRun->arguments = $response['request']['arguments'];
+
+            return $flowRun;
         }
 
         throw new \Exception('Unable to create flow run');
     }
 
-    public function getFlowRun(string $flowRunId): array|null
+    public function getFlowRun(string $flowRunId): FlowRun|null
     {
         $uri = '/flowruns/' . $flowRunId . '/summaries';
 
         $rawResult = $this->requestObject($uri);
+
+        if ($rawResult === null) {
+            return null;
+        }
+        $flowRun = new FlowRun();
+        $flowRun->id = $rawResult['id'];
+        $flowRun->flowId = $rawResult['request']['flow'];
+        $flowRun->projectEnvironmentId = $rawResult['project_environment'];
+        $flowRun->logStreamId = new LogStreamId($rawResult['request']['log_stream']);
+
+        $arguments = $rawResult['request']['arguments'];
+        if (is_array($arguments)) {
+            $flowRun->arguments = $arguments;
+        } elseif (is_null($arguments)) {
+            $flowRun->arguments = [];
+        }
         //TODO: handle when no execution is found
-        return $rawResult;
+        return $flowRun;
 
     }
 
