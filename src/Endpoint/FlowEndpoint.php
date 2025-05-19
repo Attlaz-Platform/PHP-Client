@@ -108,11 +108,11 @@ class FlowEndpoint extends Endpoint
         }
         $flowRun = new FlowRun();
         $flowRun->id = $rawResult['id'];
-        $flowRun->flowId = $rawResult['request']['flow'];
+        $flowRun->flowId = $rawResult['flow'];
         $flowRun->projectEnvironmentId = $rawResult['project_environment'];
-        $flowRun->logStreamId = new LogStreamId($rawResult['request']['log_stream']);
+        $flowRun->logStreamId = new LogStreamId($rawResult['log_stream']);
 
-        $arguments = $rawResult['request']['arguments'];
+        $arguments = $rawResult['arguments'];
         if (is_array($arguments)) {
             $flowRun->arguments = $arguments;
         } elseif (is_null($arguments)) {
