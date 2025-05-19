@@ -11,8 +11,8 @@
   "license": "MIT",
   "homepage": "https://attlaz.com",
   "require": {
-    "php": ">=8.1",
-    "league/oauth2-client": "^2.6.1",
+    "php": ">=8.2",
+    "league/oauth2-client": "^2.7.0",
     "ext-json": "*",
     "ext-openssl": "*"
   },
