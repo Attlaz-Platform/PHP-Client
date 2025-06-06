@@ -35,6 +35,8 @@ class Client
     private array $profiles = [];
     private GenericProvider $provider;
     private AccessToken|null $accessToken = null;
+
+    /** @var array<string,Endpoint> */
     private array $endpoints = [];
 
     public function __construct()
@@ -47,15 +49,6 @@ class Client
             'base_uri' => $this->endPoint,
             'timeout' => $this->timeout,
         ]);
-    }
-
-    public function setEndPoint(string $endPoint): void
-    {
-        if ($endPoint === '') {
-            throw new \InvalidArgumentException('Endpoint cannot be empty');
-        }
-        $this->endPoint = rtrim($endPoint, "/");
-        // TODO: update provider with endpoint
     }
 
     public function authWithClient(string $clientId, string $clientSecret, bool $storeToken = false): void
@@ -140,6 +133,9 @@ class Client
 
             $options = [
                 'debug' => ($this->debugLevel === 2),
+                'timeout' => 0,
+                'connect_timeout' => 0,
+                'read_timeout' => 50,
             ];
             $response = $this->provider->getHttpClient()
                 ->send($request, $options);
@@ -175,6 +171,11 @@ class Client
         $this->debugLevel = $debugLevel;
     }
 
+    public function enableRequestProfiling(): void
+    {
+        $this->profileRequests = true;
+    }
+
     //    public function scheduleTaskByCommand(string $branch, string $command, array $arguments = []): ScheduleTaskResult
     //    {
     //        $body = [
@@ -202,11 +203,6 @@ class Client
     //
     //        return $result;
     //    }
-
-    public function enableRequestProfiling(): void
-    {
-        $this->profileRequests = true;
-    }
 
     public function disableRequestProfiling(): void
     {
@@ -273,6 +269,32 @@ class Client
         return $this->getEndPoint(CollectionsEndpoint::class);
     }
 
+    /**
+     * @template T
+     * @param class-string<T> $endpointClass
+     * @return T
+     * @throws \Exception
+     */
+    public function getEndPoint(string $endpointClass): Endpoint
+    {
+        if (!array_key_exists($endpointClass, $this->endpoints)) {
+            if (!is_subclass_of($endpointClass, Endpoint::class)) {
+                throw new \Exception('Endpoint must be subclass of Endpoint');
+            }
+            $this->endpoints[$endpointClass] = new $endpointClass($this);
+        }
+        return $this->endpoints[$endpointClass];
+    }
+
+    public function setEndPoint(string $endPoint): void
+    {
+        if ($endPoint === '') {
+            throw new \InvalidArgumentException('Endpoint cannot be empty');
+        }
+        $this->endPoint = rtrim($endPoint, "/");
+        // TODO: update provider with endpoint
+    }
+
     private function authenticate(): void
     {
 
@@ -330,19 +352,5 @@ class Client
             return true;
         }
         return $this->accessToken->hasExpired();
-    }
-
-    /**
-     * @template T
-     * @param class-string<T> $endpointClass
-     * @return T
-     * @throws \Exception
-     */
-    private function getEndPoint(string $endpointClass): Endpoint
-    {
-        if (!array_key_exists($endpointClass, $this->endpoints)) {
-            $this->endpoints[$endpointClass] = new $endpointClass($this);
-        }
-        return $this->endpoints[$endpointClass];
     }
 }
