@@ -1,0 +1,84 @@
+<?php
+declare(strict_types=1);
+
+namespace Attlaz\Endpoint\MarketPulse;
+
+
+use Attlaz\Endpoint\Endpoint;
+use Attlaz\Model\MarketPulse\VendorProduct;
+
+class VendorProductEndpoint extends Endpoint
+{
+    public function getProductByIdentifier(string $vendorId, string $identifier): VendorProduct|null
+    {
+        $response = $this->requestCollection('/pulse/vendors/' . $vendorId . '/products?identifier=' . $identifier, null, 'GET');
+
+        if (!is_array($response)) {
+            throw new \Error('Invalid response');
+        }
+        if (count($response) === 0) {
+            return null;
+        }
+        return $this->parseVendorProduct($response[0]);
+    }
+
+    public function saveProduct(VendorProduct $product): VendorProduct
+    {
+
+        $data = [
+            'name' => $product->name,
+            'identifier' => $product->identifier,
+            'gtin' => $product->gtin,
+            'brand' => $product->brand,
+            'sku' => $product->sku,
+            'price' => $product->price,
+            'shipping_cost' => $product->shippingCost,
+            'is_in_stock' => $product->isInStock,
+        ];
+
+        $response = $this->requestObject('/pulse/vendors/' . $product->vendorId . '/products', $data, 'POST');
+
+        return $this->parseVendorProduct($response);
+    }
+
+    public function updateProduct(VendorProduct $product): bool
+    {
+
+        $data = [
+            ['op' => 'add', 'path' => 'price', 'value' => $product->price],
+            ['op' => 'add', 'path' => 'brand', 'value' => $product->brand],
+            ['op' => 'add', 'path' => 'shipping_cost', 'value' => $product->shippingCost],
+            ['op' => 'add', 'path' => 'is_in_stock', 'value' => $product->isInStock],
+            ['op' => 'add', 'path' => 'url', 'value' => $product->url],
+            ['op' => 'add', 'path' => 'image', 'value' => $product->image],
+        ];
+
+        $response = $this->requestObject('/pulse/vendors/' . $product->vendorId . '/products/' . $product->id, $data, 'PATCH');
+        // TODO: validate response
+        return true;
+    }
+
+    private function parseVendorProduct(array $record): VendorProduct
+    {
+        $product = new VendorProduct();
+        $product->id = $record['id'];
+        $product->vendorId = $record['vendor'];
+        $product->name = $record['name'];
+        $product->image = $record['image'];
+        $product->gtin = $record['gtin'];
+        $product->brand = $record['brand'];
+        $product->identifier = $record['identifier'];
+        $product->url = $record['url'];
+        $product->sku = $record['sku'];
+        $product->price = (float)$record['price'];
+        $product->shippingCost = $record['shipping_cost'];
+        $product->isInStock = $record['is_in_stock'];
+
+        $product->createdAt = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['created_at']);
+        $product->updatedAt = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['updated_at']);
+
+        return $product;
+    }
+
+
+}
