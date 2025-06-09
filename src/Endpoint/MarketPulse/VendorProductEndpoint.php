@@ -27,11 +27,13 @@ class VendorProductEndpoint extends Endpoint
 
         $data = [
             'name' => $product->name,
+            'image' => $product->image,
             'identifier' => $product->identifier,
             'gtin' => $product->gtin,
             'brand' => $product->brand,
             'sku' => $product->sku,
             'price' => $product->price,
+            'original_price' => $product->originalPrice,
             'shipping_cost' => $product->shippingCost,
             'is_in_stock' => $product->isInStock,
         ];
@@ -43,13 +45,14 @@ class VendorProductEndpoint extends Endpoint
 
     public function updateProduct(VendorProduct $product): bool
     {
-
         $data = [
             ['op' => 'add', 'path' => 'price', 'value' => $product->price],
+            ['op' => 'add', 'path' => 'original_price', 'value' => $product->originalPrice],
             ['op' => 'add', 'path' => 'brand', 'value' => $product->brand],
             ['op' => 'add', 'path' => 'shipping_cost', 'value' => $product->shippingCost],
             ['op' => 'add', 'path' => 'is_in_stock', 'value' => $product->isInStock],
             ['op' => 'add', 'path' => 'url', 'value' => $product->url],
+            ['op' => 'add', 'path' => 'gtin', 'value' => $product->gtin],
             ['op' => 'add', 'path' => 'image', 'value' => $product->image],
         ];
 
@@ -71,6 +74,7 @@ class VendorProductEndpoint extends Endpoint
         $product->url = $record['url'];
         $product->sku = $record['sku'];
         $product->price = (float)$record['price'];
+        $product->originalPrice = $record['original_price'] === null ? null : (float)$record['original_price'];
         $product->shippingCost = $record['shipping_cost'];
         $product->isInStock = $record['is_in_stock'];
 
