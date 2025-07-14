@@ -351,6 +351,6 @@ class Client
         if (empty($this->accessToken->getExpires())) {
             return true;
         }
-        return $this->accessToken->hasExpired();
+        return !$this->accessToken->hasExpired();
     }
 }
