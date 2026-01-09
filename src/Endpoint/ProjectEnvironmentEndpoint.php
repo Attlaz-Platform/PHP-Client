@@ -12,11 +12,14 @@ class ProjectEnvironmentEndpoint extends Endpoint
 {
 
 
-    public function getProjectEnvironmentById(string $projectEnvironmentId): ProjectEnvironment
+    public function getProjectEnvironmentById(string $projectEnvironmentId): ProjectEnvironment|null
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId;
 
         $rawEnvironment = $this->requestObject($uri);
+        if ($rawEnvironment === null) {
+            return null;
+        }
 
 
         return $this->parseProjectEnvironment($rawEnvironment);
