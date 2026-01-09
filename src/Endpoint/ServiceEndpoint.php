@@ -22,7 +22,7 @@ class ServiceEndpoint extends Endpoint
 
     public function sendServiceOperationRequest(ServiceOperationRequest $command): string|array
     {
-        $response = $this->requestObject('https://gateway.api.attlaz.com/services/' . $command->connectionId . '/test', $command->toJson(), 'POST');
+        $response = $this->requestObject('/services/' . $command->connectionId . '/test', $command->toJson(), 'POST');
 
         // TODO: validate response
         return $response['data'];
