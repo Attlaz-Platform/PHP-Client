@@ -13,6 +13,7 @@ use Attlaz\Endpoint\FlowEndpoint;
 use Attlaz\Endpoint\LogEndpoint;
 use Attlaz\Endpoint\ProjectEndpoint;
 use Attlaz\Endpoint\ProjectEnvironmentEndpoint;
+use Attlaz\Endpoint\ProviderTokenEndpoint;
 use Attlaz\Endpoint\ServiceEndpoint;
 use Attlaz\Endpoint\StorageEndpoint;
 use Attlaz\Helper\TokenStorage;
@@ -257,6 +258,11 @@ class Client
     public function getAccessTokenEndpoint(): AccessTokenEndpoint
     {
         return $this->getEndPoint(AccessTokenEndpoint::class);
+    }
+
+    public function getProviderTokenEndpoint(): ProviderTokenEndpoint
+    {
+        return $this->getEndPoint(ProviderTokenEndpoint::class);
     }
 
     public function getServiceEndpoint(): ServiceEndpoint
