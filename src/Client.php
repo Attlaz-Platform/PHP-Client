@@ -283,8 +283,8 @@ class Client
      */
     public function getEndPoint(string $endpointClass): Endpoint
     {
-        if (!array_key_exists($endpointClass, $this->endpoints)) {
-            if (!is_subclass_of($endpointClass, Endpoint::class)) {
+        if (!\array_key_exists($endpointClass, $this->endpoints)) {
+            if (!\is_subclass_of($endpointClass, Endpoint::class)) {
                 throw new \Exception('Endpoint must be subclass of Endpoint');
             }
             $this->endpoints[$endpointClass] = new $endpointClass($this);
