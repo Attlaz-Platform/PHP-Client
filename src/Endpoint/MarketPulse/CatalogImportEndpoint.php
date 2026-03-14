@@ -1,0 +1,51 @@
+<?php
+declare(strict_types=1);
+
+
+namespace Attlaz\Endpoint\MarketPulse;
+
+
+use Attlaz\Endpoint\Endpoint;
+use Attlaz\Model\MarketPulse\CatalogImport;
+
+
+class CatalogImportEndpoint extends Endpoint
+{
+    public function create(string $catalogId): CatalogImport|null
+    {
+        $data = [
+            // 'id' => $crawlJob->vendorId,
+        ];
+        $response = $this->requestObject('/catalogs/' . $catalogId . '/imports', $data, 'POST');
+        var_dump($response);
+        if ($response === null) {
+            return null;
+        }
+        return $this->parseCatalogImport($response);
+    }
+
+
+    public function update(CatalogImport $catalogImport): CatalogImport|null
+    {
+        // TODO: implement
+        $data = [
+            'id' => $catalogImport->id,
+        ];
+        $response = $this->requestObject('/catalogs/' . $catalogImport->catalogId . '/imports', $data, 'POST');
+        if ($response === null) {
+            return null;
+        }
+        return $this->parseCatalogImport($response);
+    }
+
+
+    private function parseCatalogImport(array $record): CatalogImport
+    {
+        $catalog = new CatalogImport();
+        $catalog->id = $record['id'];
+        $catalog->catalogId = $record['catalog'];
+
+
+        return $catalog;
+    }
+}

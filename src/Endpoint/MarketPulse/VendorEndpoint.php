@@ -1,11 +1,13 @@
 <?php
 declare(strict_types=1);
 
+
 namespace Attlaz\Endpoint\MarketPulse;
 
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\Model\MarketPulse\Vendor;
+
 
 class VendorEndpoint extends Endpoint
 {
@@ -18,6 +20,7 @@ class VendorEndpoint extends Endpoint
         return $this->parseVendorProduct($response);
     }
 
+
     private function parseVendorProduct(array $record): Vendor
     {
         $vendor = new Vendor();
@@ -28,6 +31,7 @@ class VendorEndpoint extends Endpoint
         $vendor->type = $record['type'];
         $vendor->botDetection = $record['bot_detection'];
         $vendor->parseStrategy = $record['parse_strategy'];
+
 
         return $vendor;
     }

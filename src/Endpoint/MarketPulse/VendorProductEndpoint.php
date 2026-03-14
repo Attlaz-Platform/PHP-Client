@@ -31,11 +31,13 @@ class VendorProductEndpoint extends Endpoint
             'identifier' => $product->identifier,
             'gtin' => $product->gtin,
             'brand' => $product->brand,
-            'sku' => $product->sku,
+            // 'sku' => $product->sku,
+            'url' => $product->url,
             'price' => $product->price,
             'original_price' => $product->originalPrice,
             'shipping_cost' => $product->shippingCost,
             'is_in_stock' => $product->isInStock,
+            'properties' => $product->properties,
         ];
 
         $response = $this->requestObject('/pulse/vendors/' . $product->vendorId . '/products', $data, 'POST');
@@ -54,6 +56,8 @@ class VendorProductEndpoint extends Endpoint
             ['op' => 'add', 'path' => 'url', 'value' => $product->url],
             ['op' => 'add', 'path' => 'gtin', 'value' => $product->gtin],
             ['op' => 'add', 'path' => 'image', 'value' => $product->image],
+            // ['op' => 'add', 'path' => 'sku', 'value' => $product->sku],
+            ['op' => 'add', 'path' => 'properties', 'value' => $product->properties],
         ];
 
         $response = $this->requestObject('/pulse/vendors/' . $product->vendorId . '/products/' . $product->id, $data, 'PATCH');
@@ -72,7 +76,7 @@ class VendorProductEndpoint extends Endpoint
         $product->brand = $record['brand'];
         $product->identifier = $record['identifier'];
         $product->url = $record['url'];
-        $product->sku = $record['sku'];
+        // $product->sku = $record['sku'];
         $product->price = (float)$record['price'];
         $product->originalPrice = $record['original_price'] === null ? null : (float)$record['original_price'];
         $product->shippingCost = $record['shipping_cost'];

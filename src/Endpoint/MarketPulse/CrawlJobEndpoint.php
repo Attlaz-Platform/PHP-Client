@@ -22,6 +22,17 @@ class CrawlJobEndpoint extends Endpoint
         return $this->parseCrawlJob($response);
     }
 
+    public function updateCrawlJob(CrawlJob $crawlJob): CrawlJob
+    {
+        $data = [
+            'status' => $crawlJob->status,
+        ];
+
+        $response = $this->requestObject('/pulse/crawl-jobs/' . $crawlJob->id, $data, 'PATCH');
+
+        return $this->parseCrawlJob($response);
+    }
+
     public function getById(string $crawlJobId): CrawlJob|null
     {
         $response = $this->requestObject('/pulse/crawl-jobs/' . $crawlJobId . '', null, 'GET');
@@ -36,6 +47,7 @@ class CrawlJobEndpoint extends Endpoint
         $crawlJob = new CrawlJob();
         $crawlJob->id = $record['id'];
         $crawlJob->vendorId = $record['vendor'];
+        $crawlJob->status = $record['status'] ?? 'pending';
 
         return $crawlJob;
     }

@@ -18,6 +18,7 @@ class VendorProduct
     public float|null $originalPrice;
     public float|null $shippingCost = null;
     public bool|null $isInStock = null;
+    public array|null $properties = null;
     public \DateTime $createdAt;
     public \DateTime $updatedAt;
 }

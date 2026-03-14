@@ -1,11 +1,15 @@
 <?php
 declare(strict_types=1);
 
+
 namespace Attlaz\Model\MarketPulse;
 
-class CrawlJob
+
+class CatalogImport
 {
     public string $id;
-    public string $vendorId;
-    public string $status = 'pending';
+    public string $catalogId;
+
+
+    public string $status;
 }
