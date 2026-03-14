@@ -9,6 +9,13 @@ use Attlaz\Model\Service\ServiceOperationRequest;
 
 class ServiceEndpoint extends Endpoint
 {
+    public function getCapabilities(string $connectionId): array
+    {
+        $response = $this->requestObject('/services/' . $connectionId . '/capabilities');
+
+        return $response['data'];
+    }
+
     public function openAI(string $connectionId, string $prompt, string $model = 'gtp-4o'): string
     {
 
@@ -22,7 +29,7 @@ class ServiceEndpoint extends Endpoint
 
     public function sendServiceOperationRequest(ServiceOperationRequest $command): string|array
     {
-        $response = $this->requestObject('/services/' . $command->connectionId . '/test', $command->toJson(), 'POST');
+        $response = $this->requestObject('/services/' . $command->connectionId . '/' . $command->operation, $command->toJson(), 'POST');
 
         // TODO: validate response
         return $response['data'];
