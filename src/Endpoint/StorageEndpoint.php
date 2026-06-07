@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace Attlaz\Endpoint;
 
 
+use Attlaz\Model\CollectionResult;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
+use Attlaz\Model\StorageItemInformation;
 use DateTimeInterface;
 
 
@@ -13,11 +15,11 @@ class StorageEndpoint extends Endpoint
 {
 
 
-    public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): ?StorageItem
+    public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $bucketKey = null): ?StorageItem
     {
 
-        if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $storageItemKey;
+        if (!empty($bucketKey)) {
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItemKey;
         } else {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
@@ -52,9 +54,9 @@ class StorageEndpoint extends Endpoint
 
     }
 
-    public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
+    public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $bucketKey = null): bool
     {
-        return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey) !== null;
+        return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey) !== null;
     }
 
     public function thawValue(array $input): mixed
@@ -75,11 +77,11 @@ class StorageEndpoint extends Endpoint
         return $input;
     }
 
-    public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $poolKey = null): bool
+    public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $bucketKey = null): bool
     {
         // TODO: how to handle overrides?
-        if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $storageItem->key;
+        if (!empty($bucketKey)) {
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItem->key;
         } else {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
         }
@@ -102,30 +104,49 @@ class StorageEndpoint extends Endpoint
     }
 
     /**
-     * @return string[]
+     * Fetch one page of item-information records for the (optional) bucket.
+     *
+     * Mirrors the JS client's getBucketItemsInformation. This endpoint returns
+     * item-information records (key, bytes, expiration, ...), NOT bare keys, and is
+     * cursor-paginated: pass the previous page's last item id as $startingAfter to
+     * fetch the next page, and inspect CollectionResult::$hasMore for further pages.
+     *
+     * To collect every key in a bucket, use StorageEngine::getItemKeys() which walks
+     * all pages on top of this method.
+     *
+     * @return CollectionResult<StorageItemInformation>
      */
-    public function getItemKeys(string $projectEnvironmentId, string $storageType, ?string $poolKey = null): array
+    public function getBucketItemsInformation(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null, ?string $startingAfter = null, int $limit = 1000): CollectionResult
     {
-        if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items';
+        if (!empty($bucketKey)) {
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items';
         } else {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items';
         }
-
-
-        $rawItem = $this->requestObject($uri);
-
-        if (isset($rawItem['data']) && isset($rawItem['data']['item_keys'])) {
-            // TODO: remove this fallback to old method once no longer needed
-            return $rawItem['data']['item_keys'];
+        $uri .= '?limit=' . $limit;
+        if ($startingAfter !== null) {
+            $uri .= '&starting_after=' . \rawurlencode($startingAfter);
         }
-        return $rawItem['data'];
+
+        $rawResult = $this->requestObject($uri);
+        if ($rawResult === null || !isset($rawResult['data']) || !\is_array($rawResult['data'])) {
+            return new CollectionResult([], false);
+        }
+
+        $items = [];
+        foreach ($rawResult['data'] as $record) {
+            $items[] = StorageItemInformation::fromArray($record);
+        }
+
+        $hasMore = $rawResult['has_more'] ?? false;
+
+        return new CollectionResult($items, (bool) $hasMore);
     }
 
-    public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $poolKey = null): bool
+    public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $bucketKey = null): bool
     {
-        if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey . '/items/' . $storageItemKey;
+        if (!empty($bucketKey)) {
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItemKey;
         } else {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
         }
@@ -139,11 +160,11 @@ class StorageEndpoint extends Endpoint
         throw new \Exception('Invalid response');
     }
 
-    public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, ?string $poolKey = null): array
+    public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, ?string $bucketKey = null): array
     {
         $result = [];
         foreach ($storageItemKeys as $storageItemKey) {
-            $result[$storageItemKey] = $this->deleteItem($projectEnvironmentId, $storageType, $storageItemKey, $poolKey);
+            $result[$storageItemKey] = $this->deleteItem($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey);
         }
         return $result;
     }
@@ -151,30 +172,30 @@ class StorageEndpoint extends Endpoint
     /**
      * @return string[]
      */
-    public function getPoolKeys(string $projectEnvironmentId, string $storageType): array
+    public function getBucketKeys(string $projectEnvironmentId, string $storageType): array
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
 
 
         $rawItem = $this->requestObject($uri);
 
-        if (\is_null($rawItem['pools'])) {
+        // Prefer the new `buckets` field; fall back to the legacy `pools` for older API responses.
+        $rawBuckets = $rawItem['buckets'] ?? $rawItem['pools'] ?? null;
+        if (\is_null($rawBuckets)) {
             throw new \Exception('Invalid response');
         }
 
-        $rawPools = $rawItem['pools'];
-
         $result = [];
-        foreach ($rawPools as $rawPool) {
-            $result[] = $rawPool['name'];
+        foreach ($rawBuckets as $rawBucket) {
+            $result[] = $rawBucket['name'];
         }
         return $result;
     }
 
-    public function clearPool(string $projectEnvironmentId, string $storageType, ?string $poolKey = null): bool
+    public function clearBucket(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null): bool
     {
-        if (!empty($poolKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $poolKey;
+        if (!empty($bucketKey)) {
+            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey;
         } else {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
         }
@@ -188,6 +209,24 @@ class StorageEndpoint extends Endpoint
         }
 
         throw new \Exception('Invalid response');
+    }
+
+    /** @deprecated Renamed to getBucketItemsInformation(). */
+    public function getPoolItemsInformation(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null, ?string $startingAfter = null, int $limit = 1000): CollectionResult
+    {
+        return $this->getBucketItemsInformation($projectEnvironmentId, $storageType, $bucketKey, $startingAfter, $limit);
+    }
+
+    /** @deprecated Renamed to clearBucket(). */
+    public function clearPool(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null): bool
+    {
+        return $this->clearBucket($projectEnvironmentId, $storageType, $bucketKey);
+    }
+
+    /** @deprecated Renamed to getBucketKeys(). */
+    public function getPoolKeys(string $projectEnvironmentId, string $storageType): array
+    {
+        return $this->getBucketKeys($projectEnvironmentId, $storageType);
     }
 
     private function freezeValue(mixed $value): array|string
