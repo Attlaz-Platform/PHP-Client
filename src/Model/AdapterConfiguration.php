@@ -5,8 +5,12 @@ namespace Attlaz\Model;
 
 class AdapterConfiguration
 {
+    /** @var array<string, mixed> */
     private array $data;
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function __construct(array $data)
     {
         $this->data = $data;

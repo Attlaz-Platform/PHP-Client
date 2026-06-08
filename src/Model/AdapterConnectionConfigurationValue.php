@@ -5,6 +5,9 @@ namespace Attlaz\Model;
 
 class AdapterConnectionConfigurationValue
 {
+    /**
+     * @param array<string, mixed> $data
+     */
     public function __construct(private readonly array $data)
     {
     }

@@ -8,10 +8,12 @@ use DateTimeInterface;
 class StorageItem implements \JsonSerializable
 {
     public string $key;
-    /** @var string|int|float|array|object|null|bool */
-    public $value;
-    public ?\DateTime $expiration = null;
+    public mixed $value = null;
+    public \DateTime|null $expiration = null;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function jsonSerialize(): array
     {
         return [

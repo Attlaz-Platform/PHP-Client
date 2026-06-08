@@ -158,6 +158,10 @@ class StorageEndpoint extends Endpoint
         throw new \Exception('Invalid response');
     }
 
+    /**
+     * @param string[] $storageItemKeys
+     * @return array<string, bool> map of item key => deleted
+     */
     public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, string|null $bucketKey = null): array
     {
         $result = [];

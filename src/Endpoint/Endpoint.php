@@ -84,6 +84,11 @@ abstract class Endpoint
         return $uri . $separator . \http_build_query($query);
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $data
+     * @param callable(array<string, mixed>): mixed $parser
+     * @return list<mixed>
+     */
     private function parseCollection(array $data, callable $parser): array
     {
         $result = [];
@@ -94,6 +99,9 @@ abstract class Endpoint
         return $result;
     }
 
+    /**
+     * @return array<string, mixed>|null the decoded JSON response body, or null on 404
+     */
     public function requestObject(string $uri, array|object|null $body = null, string $method = 'GET'): array|null
     {
         $request = $this->createRequest($method, $uri, $body);
