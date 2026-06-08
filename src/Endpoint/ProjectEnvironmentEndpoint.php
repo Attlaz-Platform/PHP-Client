@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Helper\LoadAllHelper;
+use Attlaz\Model\CollectionResult;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\ProjectEnvironment;
 use Attlaz\Model\State;
@@ -28,7 +31,7 @@ class ProjectEnvironmentEndpoint extends Endpoint
     public function getProjectEnvironmentByKey(string $projectId, string $projectEnvironmentKey): ProjectEnvironment
     {
         //TODO: handle when environment is not found
-        $projectEnvironments = $this->getProjectEnvironments($projectId);
+        $projectEnvironments = LoadAllHelper::loadAll(fn(CursorPagination $pagination): CollectionResult => $this->getProjectEnvironments($projectId, $pagination));
         foreach ($projectEnvironments as $projectEnvironment) {
             if ($projectEnvironment->key === $projectEnvironmentKey) {
                 return $projectEnvironment;
@@ -41,23 +44,16 @@ class ProjectEnvironmentEndpoint extends Endpoint
 
     /**
      * @param string $projectId
-     * @return ProjectEnvironment[]
+     * @return CollectionResult<ProjectEnvironment>
      * @throws RequestException
      */
-    public function getProjectEnvironments(string $projectId): array
+    public function getProjectEnvironments(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/projects/' . $projectId . '/environments';
 
+        $parser = fn(array $rawEnvironment): ProjectEnvironment => $this->parseProjectEnvironment($rawEnvironment);
 
-        $projectEnvironments = [];
-        //TODO: handle when environment is not found
-        $rawEnvironments = $this->requestCollection($uri);
-
-        foreach ($rawEnvironments as $rawEnvironment) {
-            $projectEnvironments[] = $this->parseProjectEnvironment($rawEnvironment);
-        }
-
-        return $projectEnvironments;
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     private function parseProjectEnvironment(array $rawEnvironment): ProjectEnvironment

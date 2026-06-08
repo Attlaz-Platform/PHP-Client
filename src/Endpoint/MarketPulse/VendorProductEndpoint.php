@@ -11,11 +11,8 @@ class VendorProductEndpoint extends Endpoint
 {
     public function getProductByIdentifier(string $vendorId, string $identifier): VendorProduct|null
     {
-        $response = $this->requestCollection('/pulse/vendors/' . $vendorId . '/products?identifier=' . $identifier, null, 'GET');
+        $response = $this->requestCollection('/pulse/vendors/' . $vendorId . '/products?identifier=' . $identifier)->getData();
 
-        if (!is_array($response)) {
-            throw new \Error('Invalid response');
-        }
         if (count($response) === 0) {
             return null;
         }

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Model\CollectionResult;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\Project;
 use Attlaz\Model\State;
@@ -24,25 +26,16 @@ class ProjectEndpoint extends Endpoint
     }
 
     /**
-     * @return Project[]
+     * @return CollectionResult<Project>
      * @throws RequestException
      */
-    public function getProjects(): array
+    public function getProjects(CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/projects/';
 
-        $projects = [];
+        $parser = fn(array $rawProject): Project => $this->parseProject($rawProject);
 
-
-        $rawProjects = $this->requestCollection($uri);
-        if (isset($rawProjects['data'])) {
-            $rawProjects = $rawProjects['data'];
-        }
-        foreach ($rawProjects as $rawProject) {
-            $projects[] = $this->parseProject($rawProject);
-        }
-
-        return $projects;
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     private function parseProject(array $rawProject): Project

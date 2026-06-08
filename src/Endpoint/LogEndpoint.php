@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Model\CollectionResult;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Log\LogEntry;
 use Attlaz\Model\Log\LogStream;
 use Attlaz\Model\Log\LogStreamId;
@@ -32,28 +34,22 @@ class LogEndpoint extends Endpoint
 
     /**
      * @param string $projectId
-     * @return LogStream[]
+     * @return CollectionResult<LogStream>
      * @throws \Attlaz\Model\Exception\RequestException
      */
-    public function getLogStreams(string $projectId): array
+    public function getLogStreams(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
-
         $uri = '/projects/' . $projectId . '/logstreams';
 
-
-        $logStreams = $this->requestCollection($uri);
-
-
-        $result = [];
-        foreach ($logStreams as $logStream) {
-
+        $parser = static function (array $logStream): LogStream {
             $id = $logStream['id'];
             if (\is_array($id)) {
                 $id = $id['id'];
             }
-            $result[] = new LogStream(new LogStreamId($id), $logStream['name']);
-        }
 
-        return $result;
+            return new LogStream(new LogStreamId($id), $logStream['name']);
+        };
+
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 }

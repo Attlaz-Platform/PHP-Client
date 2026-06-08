@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Model\CollectionResult;
 use Attlaz\Model\Config;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 
 
@@ -12,21 +14,15 @@ class ConfigEndpoint extends Endpoint
 
 
     /**
-     * @param string $projectId
-     * @param int|null $projectEnvironmentId
-     * @return Config[]
+     * @param string|null $projectEnvironmentId
+     * @return CollectionResult<Config>
      * @throws RequestException
      */
-    public function getConfigByProject(string|null $projectEnvironmentId = null): array
+    public function getConfigByProject(string|null $projectEnvironmentId = null, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/projectenvironments/' . $projectEnvironmentId . '/configvalues';
 
-
-        $rawConfigValues = $this->requestCollection($uri);
-        $result = [];
-
-
-        foreach ($rawConfigValues as $rawConfigValue) {
+        $parser = static function (array $rawConfigValue): Config {
             $configValue = new Config();
             $configValue->id = (string)$rawConfigValue['id'];
             $configValue->inheritable = $rawConfigValue['inheritable'];
@@ -39,15 +35,13 @@ class ConfigEndpoint extends Endpoint
 
             $configValue->projectEnvironment = $rawConfigValue['project_environment'];
 
-
             $configValue->key = $rawConfigValue['key'];
             $configValue->value = $rawConfigValue['value'];
 
-            $result[] = $configValue;
-        }
+            return $configValue;
+        };
 
-
-        return $result;
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
 }

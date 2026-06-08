@@ -11,11 +11,8 @@ class CatalogProductEndpoint extends Endpoint
 {
     public function getProductByIdentifier(string $catalogId, string $identifier): CatalogProduct|null
     {
-        $response = $this->requestCollection('/catalogs/' . $catalogId . '/products?identifier=' . $identifier, null, 'GET');
+        $response = $this->requestCollection('/catalogs/' . $catalogId . '/products?identifier=' . $identifier)->getData();
 
-        if (!is_array($response)) {
-            throw new \Error('Invalid response');
-        }
         if (count($response) === 0) {
             return null;
         }

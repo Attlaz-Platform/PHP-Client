@@ -5,6 +5,7 @@ namespace Attlaz\Endpoint;
 
 
 use Attlaz\Model\CollectionResult;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
 use Attlaz\Model\StorageItemInformation;
@@ -15,7 +16,7 @@ class StorageEndpoint extends Endpoint
 {
 
 
-    public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $bucketKey = null): ?StorageItem
+    public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): StorageItem|null
     {
 
         if (!empty($bucketKey)) {
@@ -54,7 +55,7 @@ class StorageEndpoint extends Endpoint
 
     }
 
-    public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $bucketKey = null): bool
+    public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): bool
     {
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey) !== null;
     }
@@ -77,7 +78,7 @@ class StorageEndpoint extends Endpoint
         return $input;
     }
 
-    public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, ?string $bucketKey = null): bool
+    public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, string|null $bucketKey = null): bool
     {
         // TODO: how to handle overrides?
         if (!empty($bucketKey)) {
@@ -108,25 +109,22 @@ class StorageEndpoint extends Endpoint
      *
      * Mirrors the JS client's getBucketItemsInformation. This endpoint returns
      * item-information records (key, bytes, expiration, ...), NOT bare keys, and is
-     * cursor-paginated: pass the previous page's last item id as $startingAfter to
-     * fetch the next page, and inspect CollectionResult::$hasMore for further pages.
+     * cursor-paginated: set $pagination->startingAfter to the previous page's last item
+     * id to fetch the next page, and inspect CollectionResult::$hasMore for further pages.
      *
      * To collect every key in a bucket, use StorageEngine::getItemKeys() which walks
      * all pages on top of this method.
      *
      * @return CollectionResult<StorageItemInformation>
      */
-    public function getBucketItemsInformation(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null, ?string $startingAfter = null, int $limit = 1000): CollectionResult
+    public function getBucketItemsInformation(string $projectEnvironmentId, string $storageType, string|null $bucketKey = null, CursorPagination|null $pagination = null): CollectionResult
     {
         if (!empty($bucketKey)) {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items';
         } else {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items';
         }
-        $uri .= '?limit=' . $limit;
-        if ($startingAfter !== null) {
-            $uri .= '&starting_after=' . \rawurlencode($startingAfter);
-        }
+        $uri = $this->appendPaginationQuery($uri, $pagination);
 
         $rawResult = $this->requestObject($uri);
         if ($rawResult === null || !isset($rawResult['data']) || !\is_array($rawResult['data'])) {
@@ -143,7 +141,7 @@ class StorageEndpoint extends Endpoint
         return new CollectionResult($items, (bool) $hasMore);
     }
 
-    public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, ?string $bucketKey = null): bool
+    public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): bool
     {
         if (!empty($bucketKey)) {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItemKey;
@@ -160,7 +158,7 @@ class StorageEndpoint extends Endpoint
         throw new \Exception('Invalid response');
     }
 
-    public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, ?string $bucketKey = null): array
+    public function deleteItems(string $projectEnvironmentId, string $storageType, array $storageItemKeys, string|null $bucketKey = null): array
     {
         $result = [];
         foreach ($storageItemKeys as $storageItemKey) {
@@ -192,7 +190,7 @@ class StorageEndpoint extends Endpoint
         return $result;
     }
 
-    public function clearBucket(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null): bool
+    public function clearBucket(string $projectEnvironmentId, string $storageType, string|null $bucketKey = null): bool
     {
         if (!empty($bucketKey)) {
             $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey;
@@ -211,14 +209,8 @@ class StorageEndpoint extends Endpoint
         throw new \Exception('Invalid response');
     }
 
-    /** @deprecated Renamed to getBucketItemsInformation(). */
-    public function getPoolItemsInformation(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null, ?string $startingAfter = null, int $limit = 1000): CollectionResult
-    {
-        return $this->getBucketItemsInformation($projectEnvironmentId, $storageType, $bucketKey, $startingAfter, $limit);
-    }
-
     /** @deprecated Renamed to clearBucket(). */
-    public function clearPool(string $projectEnvironmentId, string $storageType, ?string $bucketKey = null): bool
+    public function clearPool(string $projectEnvironmentId, string $storageType, string|null $bucketKey = null): bool
     {
         return $this->clearBucket($projectEnvironmentId, $storageType, $bucketKey);
     }

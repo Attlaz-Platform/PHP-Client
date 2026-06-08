@@ -12,12 +12,12 @@ use DateTimeInterface;
  */
 class StorageItemInformation
 {
-    public ?string $id = null;
+    public string|null $id = null;
     public string $key;
     public int $bytes = 0;
-    public ?\DateTime $expiration = null;
-    public ?\DateTime $created = null;
-    public ?\DateTime $updated = null;
+    public \DateTime|null $expiration = null;
+    public \DateTime|null $created = null;
+    public \DateTime|null $updated = null;
 
     public static function fromArray(array $raw): self
     {
@@ -32,7 +32,7 @@ class StorageItemInformation
         return $info;
     }
 
-    private static function parseDate(?string $value): ?\DateTime
+    private static function parseDate(string|null $value): \DateTime|null
     {
         if ($value === null) {
             return null;

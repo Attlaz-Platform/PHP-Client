@@ -6,6 +6,8 @@ namespace Attlaz\Endpoint;
 use Attlaz\Model\AdapterConfiguration;
 use Attlaz\Model\AdapterConnection;
 use Attlaz\Model\AdapterConnectionConfigurationValue;
+use Attlaz\Model\CollectionResult;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 
 class ConnectionEndpoint extends Endpoint
@@ -14,22 +16,16 @@ class ConnectionEndpoint extends Endpoint
 
     /**
      * @param string $projectId
-     * @return AdapterConnection[]
+     * @return CollectionResult<AdapterConnection>
      * @throws RequestException
      */
-    public function getConnections(string $projectId): array
+    public function getConnections(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/projects/' . $projectId . '/connections';
 
+        $parser = static fn(array $rawConnection): AdapterConnection => new AdapterConnection($rawConnection);
 
-        $rawConnections = $this->requestCollection($uri, null, 'GET');
-
-        $connections = [];
-        foreach ($rawConnections as $rawConnection) {
-            $connections[] = new AdapterConnection($rawConnection);
-        }
-
-        return $connections;
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     /**
@@ -64,37 +60,30 @@ class ConnectionEndpoint extends Endpoint
 
     /**
      * @param string $adapterId
-     * @return AdapterConfiguration[]
+     * @return CollectionResult<AdapterConfiguration>
      * @throws \Exception
      */
-    public function getAdapterConfiguration(string $adapterId): array
+    public function getAdapterConfiguration(string $adapterId, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/adapters/' . $adapterId . '/configuration';
-        $rawConfigurations = $this->requestCollection($uri, null, 'GET');
 
-        $configurations = [];
-        foreach ($rawConfigurations as $rawConfiguration) {
-            $configurations[] = new  AdapterConfiguration($rawConfiguration);
-        }
+        $parser = static fn(array $rawConfiguration): AdapterConfiguration => new AdapterConfiguration($rawConfiguration);
 
-        return $configurations;
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     /**
      * @param string $connectionId
-     * @return AdapterConnectionConfigurationValue[]
+     * @return CollectionResult<AdapterConnectionConfigurationValue>
      * @throws \Exception
      */
-    public function getConnectionConfiguration(string $connectionId): array
+    public function getConnectionConfiguration(string $connectionId, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/connections/' . $connectionId . '/configuration';
-        $rawConfigurations = $this->requestCollection($uri, null, 'GET');
-        $configurations = [];
-        foreach ($rawConfigurations as $rawConfiguration) {
-            $configurations[] = new AdapterConnectionConfigurationValue($rawConfiguration);
-        }
 
-        return $configurations;
+        $parser = static fn(array $rawConfiguration): AdapterConnectionConfigurationValue => new AdapterConnectionConfigurationValue($rawConfiguration);
+
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     public function createConnectionEvent(string $adapterConnectionId, string $type): bool

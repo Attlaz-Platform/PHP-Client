@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Model\CollectionResult;
+use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\Flow;
 use Attlaz\Model\FlowRun;
@@ -52,10 +54,10 @@ class FlowEndpoint extends Endpoint
 
     /**
      * @param string $projectId
-     * @return Flow[]
+     * @return CollectionResult<Flow>
      * @throws RequestException
      */
-    public function getFlows(string $projectId): array
+    public function getFlows(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/projects/' . $projectId . '/flows';
 
@@ -70,7 +72,7 @@ class FlowEndpoint extends Endpoint
             $flow->state = State::from($record['state']);
             return $flow;
         };
-        return $this->requestCollection($uri, null, 'GET', $parser);
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     public function createFlowRun(string $flowId, string $projectEnvironmentId): FlowRun
@@ -125,10 +127,10 @@ class FlowEndpoint extends Endpoint
 
     /**
      * @param string $flowId
-     * @return FlowRunSummary[]
+     * @return CollectionResult<FlowRunSummary>
      * @throws \Exception
      */
-    public function getFlowRunSummaries(string $flowId): array
+    public function getFlowRunSummaries(string $flowId, CursorPagination|null $pagination = null): CollectionResult
     {
         $uri = '/flows/' . $flowId . '/runsummaries';
 
@@ -143,7 +145,7 @@ class FlowEndpoint extends Endpoint
             $flowRunSummary->status = $record['status'];
             return $flowRunSummary;
         };
-        return $this->requestCollection($uri, null, 'GET', $parser);
+        return $this->requestCollection($uri, $pagination, $parser);
     }
 
     public function updateFlowRun(string $flowRunId, string $status, int|null $time = null): void
