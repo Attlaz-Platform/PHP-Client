@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 
-namespace Attlaz\Model\MarketPulse;
+namespace Attlaz\MarketPulse\Model;
 
 
 class CatalogImport

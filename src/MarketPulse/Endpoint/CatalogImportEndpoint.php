@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 
-namespace Attlaz\Endpoint\MarketPulse;
+namespace Attlaz\MarketPulse\Endpoint;
 
 
 use Attlaz\Endpoint\Endpoint;
-use Attlaz\Model\MarketPulse\CatalogImport;
+use Attlaz\MarketPulse\Model\CatalogImport;
 
 
 class CatalogImportEndpoint extends Endpoint

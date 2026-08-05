@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Attlaz\Endpoint\MarketPulse;
+namespace Attlaz\MarketPulse\Endpoint;
 
 
 use Attlaz\Endpoint\Endpoint;
-use Attlaz\Model\MarketPulse\CatalogProduct;
+use Attlaz\MarketPulse\Model\CatalogProduct;
 
 class CatalogProductEndpoint extends Endpoint
 {

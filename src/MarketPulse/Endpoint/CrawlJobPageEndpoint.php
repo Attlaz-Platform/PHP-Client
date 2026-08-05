@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 
-namespace Attlaz\Endpoint\MarketPulse;
+namespace Attlaz\MarketPulse\Endpoint;
 
 
 use Attlaz\Endpoint\Endpoint;
-use Attlaz\Model\MarketPulse\CrawlJobPage;
+use Attlaz\MarketPulse\Model\CrawlJobPage;
 
 
 class CrawlJobPageEndpoint extends Endpoint
@@ -35,7 +35,7 @@ class CrawlJobPageEndpoint extends Endpoint
         $data = [
             ['op' => 'add', 'path' => 'content', 'value' => $crawlJobPage->content],
             ['op' => 'add', 'path' => 'crawled_at', 'value' =>
-                $crawlJobPage === null ? null : $crawlJobPage->crawledAt->format(\DateTimeInterface::RFC3339_EXTENDED),
+                $crawlJobPage->crawledAt === null ? null : $crawlJobPage->crawledAt->format(\DateTimeInterface::RFC3339_EXTENDED),
 
 
             ],
