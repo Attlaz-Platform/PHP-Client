@@ -10,11 +10,7 @@ use PHPUnit\Framework\TestCase;
 class StorageTest extends TestCase
 {
 
-    private array $endpoints = ['https://api.attlaz.com/1.9',
-        //            'https://api.attlaz.com/1.6',
-        //            'https://api.attlaz.com/1.7',
-        //            'https://api.attlaz.com/1.8',
-        //            'https://api.attlaz.com/beta',
+    private array $endpoints = ['https://gateway.api.attlaz.com',
         //'https://24c4-188-211-160-246.ngrok.io/'
     ];
 

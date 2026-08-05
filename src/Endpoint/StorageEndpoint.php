@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
@@ -12,6 +14,19 @@ use Attlaz\Model\StorageItemInformation;
 use DateTimeInterface;
 
 
+/**
+ * Storage values are sent and returned as they are — no encoding on the way out, no decoding on the
+ * way in. The platform records per item how it stored the value (plain, JSON, BSON or binary) and
+ * hands it back in the same shape, so an array written here comes back an array.
+ *
+ * This client used to wrap objects and arrays in a `{method, value}` envelope, because in 2022 the
+ * platform had no way to record how a value was encoded. It gained one in June 2025, which made the
+ * envelope redundant — and it was never understood by the JavaScript client, so a value written here
+ * could not be read there.
+ *
+ * One consequence: an object comes back as an associative array. Neither JSON nor BSON carries PHP
+ * classes, so the original type is not restored.
+ */
 class StorageEndpoint extends Endpoint
 {
 
@@ -20,9 +35,9 @@ class StorageEndpoint extends Endpoint
     {
 
         if (!empty($bucketKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItemKey;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/:bucketKey/items/:storageItemKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'bucketKey' => $bucketKey, 'storageItemKey' => $storageItemKey]);
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/items/:storageItemKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'storageItemKey' => $storageItemKey]);
         }
 
 
@@ -36,11 +51,7 @@ class StorageEndpoint extends Endpoint
 
             $item = new StorageItem();
             $item->key = $rawItem['key'];
-            if (is_array($rawItem['value'])) {
-                $item->value = $this->thawValue($rawItem['value']);
-            } else {
-                $item->value = $rawItem['value'];
-            }
+            $item->value = $rawItem['value'];
             if ($rawItem['expiration'] !== null) {
                 $item->expiration = \DateTime::createFromFormat(DateTimeInterface::RFC3339_EXTENDED, $rawItem['expiration']);
             }
@@ -60,38 +71,16 @@ class StorageEndpoint extends Endpoint
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey) !== null;
     }
 
-    public function thawValue(array $input): mixed
-    {
-        if (isset($input['method'])) {
-            if (!isset($input['value'])) {
-                throw new \Exception('Unable to thaw value: value not defined');
-            }
-            switch ($input['method']) {
-                case 'serialize':
-                    return \unserialize($input['value']);
-                case 'json':
-                    return \json_decode($input['value'], true);
-                default:
-                    throw new \Exception('Unable to thaw value: method "' . $input['method'] . '" not recognized');
-            }
-        }
-        return $input;
-    }
-
     public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, string|null $bucketKey = null): bool
     {
         // TODO: how to handle overrides?
         if (!empty($bucketKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItem->key;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/:bucketKey/items/:key', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'bucketKey' => $bucketKey, 'key' => $storageItem->key]);
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItem->key;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/items/:key', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'key' => $storageItem->key]);
         }
 
-        $data = clone $storageItem;
-        $data->value = $this->freezeValue($data->value);
-
-
-        $rawResult = $this->requestObject($uri, $data, 'POST');
+        $rawResult = $this->requestObject($uri, $storageItem, 'POST');
 
 //        if (isset($rawResult['data']) && isset($rawResult['data']['success'])) {
 //            return $rawResult['data']['success'];
@@ -120,9 +109,9 @@ class StorageEndpoint extends Endpoint
     public function getBucketItemsInformation(string $projectEnvironmentId, string $storageType, string|null $bucketKey = null, CursorPagination|null $pagination = null): CollectionResult
     {
         if (!empty($bucketKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items';
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/:bucketKey/items', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'bucketKey' => $bucketKey]);
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items';
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/items', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType]);
         }
         $uri = $this->appendPaginationQuery($uri, $pagination);
 
@@ -144,9 +133,9 @@ class StorageEndpoint extends Endpoint
     public function deleteItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): bool
     {
         if (!empty($bucketKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey . '/items/' . $storageItemKey;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/:bucketKey/items/:storageItemKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'bucketKey' => $bucketKey, 'storageItemKey' => $storageItemKey]);
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/items/' . $storageItemKey;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/items/:storageItemKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'storageItemKey' => $storageItemKey]);
         }
 
 
@@ -176,7 +165,7 @@ class StorageEndpoint extends Endpoint
      */
     public function getBucketKeys(string $projectEnvironmentId, string $storageType): array
     {
-        $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
+        $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType]);
 
 
         $rawItem = $this->requestObject($uri);
@@ -197,9 +186,9 @@ class StorageEndpoint extends Endpoint
     public function clearBucket(string $projectEnvironmentId, string $storageType, string|null $bucketKey = null): bool
     {
         if (!empty($bucketKey)) {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType . '/' . $bucketKey;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/:bucketKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'bucketKey' => $bucketKey]);
         } else {
-            $uri = '/projectenvironments/' . $projectEnvironmentId . '/storage/' . $storageType;
+            $uri = Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType]);
         }
 
 
@@ -225,15 +214,4 @@ class StorageEndpoint extends Endpoint
         return $this->getBucketKeys($projectEnvironmentId, $storageType);
     }
 
-    private function freezeValue(mixed $value): array|string
-    {
-        // TODO: should there be a way to force php serialisation?
-//        if (is_object($value) || is_array($value)) {
-//            return ['method' => 'serialize', 'value' => \serialize($value)];
-//        }
-        if (is_object($value) || is_array($value)) {
-            return ['method' => 'json', 'value' => json_encode($value)];
-        }
-        return $value;
-    }
 }
