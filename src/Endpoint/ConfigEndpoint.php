@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\Config;
 use Attlaz\Model\CursorPagination;
@@ -20,7 +22,7 @@ class ConfigEndpoint extends Endpoint
      */
     public function getConfigByProject(string|null $projectEnvironmentId = null, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/projectenvironments/' . $projectEnvironmentId . '/configvalues';
+        $uri = Path::build('/projectenvironments/:projectEnvironmentId/configvalues', ['projectEnvironmentId' => $projectEnvironmentId]);
 
         $parser = static function (array $rawConfigValue): Config {
             $configValue = new Config();
