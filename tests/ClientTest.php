@@ -8,13 +8,16 @@ use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
 {
+    /**
+     * The project these tests read against. Its contents change over time, so assert on shape and
+     * membership rather than on exact counts — an exact count turns "someone added a flow" into a
+     * failing test, which is how the previous fixtures rotted.
+     */
+    private const PROJECT_ID = '1dCxPOug1npDYEPY7W719a9CszW';
+    private const PRODUCTION_ENVIRONMENT_ID = '1F6GQAEc8GYLZ5ohnaTudLOL3OG';
+
     private array $endpoints = [
-//        'https://api.attlaz.com',
-//        'https://api.attlaz.com/1.6',
-//        'https://api.attlaz.com/1.7',
-//        'https://api.attlaz.com/1.8',
-        'https://api.attlaz.com/1.9',
-//        'https://api.attlaz.com/beta'
+        'https://gateway.api.attlaz.com',
     ];
 
     public function setUp(): void
@@ -34,19 +37,22 @@ class ClientTest extends TestCase
         foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $project = $client->getProjectEndpoint()->getProjectById('1dCxPOug1npDYEPY7W719a9CszW');
-            $this->assertEquals('1dCxPOug1npDYEPY7W719a9CszW', $project->id);
+            $project = $client->getProjectEndpoint()->getProjectById(self::PROJECT_ID);
+            $this->assertEquals(self::PROJECT_ID, $project->id);
             $this->assertEquals('webshop', $project->key);
             $this->assertEquals('0yYdGTNLivhDAha0rnebH9VyFdi', $project->workspaceId);
 
-            $projectEnvironment = $client->getProjectEnvironmentEndpoint()->getProjectEnvironmentByKey('1dCxPOug1npDYEPY7W719a9CszW', '1F6GQAEc8GYLZ5ohnaTudLOL3OG');
-            $this->assertEquals('1dCxPOug1npDYEPY7W719a9CszW', $projectEnvironment->projectId);
-            $this->assertEquals('1F6GQAEc8GYLZ5ohnaTudLOL3OG', $projectEnvironment->id);
+            // Takes the environment *key*, not its id — this used to be passed an id, so it looked
+            // for an environment keyed "1F6GQ…" and could only ever 404.
+            $projectEnvironment = $client->getProjectEnvironmentEndpoint()->getProjectEnvironmentByKey(self::PROJECT_ID, 'production');
+            $this->assertEquals(self::PROJECT_ID, $projectEnvironment->projectId);
+            $this->assertEquals(self::PRODUCTION_ENVIRONMENT_ID, $projectEnvironment->id);
             $this->assertEquals('production', $projectEnvironment->key);
 
-            $projectEnvironments = $client->getProjectEnvironmentEndpoint()->getProjectEnvironments('0DF2CCCDF');
-            foreach ($projectEnvironments as $projectEnvironment) {
-                $this->assertEquals('0DF2CCCDF', $projectEnvironment->projectId);
+            $projectEnvironments = $client->getProjectEnvironmentEndpoint()->getProjectEnvironments(self::PROJECT_ID);
+            $this->assertNotEmpty($projectEnvironments->getData());
+            foreach ($projectEnvironments->getData() as $environment) {
+                $this->assertEquals(self::PROJECT_ID, $environment->projectId);
             }
         }
 
@@ -63,10 +69,11 @@ class ClientTest extends TestCase
         foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $projectEnvironments = $client->getProjectEnvironmentEndpoint()->getProjectEnvironments('0DF2CCCDF');
+            $projectEnvironments = $client->getProjectEnvironmentEndpoint()->getProjectEnvironments(self::PROJECT_ID);
 
-
-            $this->assertCount(3, $projectEnvironments);
+            $keys = \array_map(static fn($environment): string => $environment->key, $projectEnvironments->getData());
+            $this->assertContains('production', $keys);
+            $this->assertContains('staging', $keys);
         }
     }
 
@@ -82,8 +89,8 @@ class ClientTest extends TestCase
 
             $projects = $client->getProjectEndpoint()->getProjects();
 
-
-            $this->assertCount(1, $projects);
+            $ids = \array_map(static fn($project): string => $project->id, $projects->getData());
+            $this->assertContains(self::PROJECT_ID, $ids);
         }
     }
 
@@ -97,11 +104,13 @@ class ClientTest extends TestCase
         foreach ($this->endpoints as $endpoint) {
             $client->setEndPoint($endpoint);
 
-            $flows = $client->getFlowEndpoint()->getFlows('1dCxPOug1npDYEPY7W719a9CszW');
+            $flows = $client->getFlowEndpoint()->getFlows(self::PROJECT_ID);
 
-
-            $this->assertCount(8, $flows);
+            $this->assertNotEmpty($flows->getData());
+            foreach ($flows->getData() as $flow) {
+                $this->assertNotEmpty($flow->id);
+                $this->assertEquals(self::PROJECT_ID, $flow->projectId);
+            }
         }
     }
 }
-

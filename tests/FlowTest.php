@@ -9,12 +9,7 @@ use PHPUnit\Framework\TestCase;
 class FlowTest extends TestCase
 {
     private array $endpoints = [
-//        'https://api.attlaz.com',
-//        'https://api.attlaz.com/1.6',
-//        'https://api.attlaz.com/1.7',
-//        'https://api.attlaz.com/1.8',
-        'https://api.attlaz.com/1.9',
-//        'https://api.attlaz.com/beta'
+        'https://gateway.api.attlaz.com',
     ];
 
     public function setUp(): void

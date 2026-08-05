@@ -3,19 +3,14 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\Model\AccessToken;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
 
 class AuthenticationTest extends TestCase
 {
     private array $endpoints = [
-//        'https://api.attlaz.com',
-//        'https://api.attlaz.com/1.6',
-//        'https://api.attlaz.com/1.7',
-//        'https://api.attlaz.com/1.8',
-//        'https://api.attlaz.com/1.9',
-//        'https://api.attlaz.com/beta'
-        'https://marginally-smart-rodent.ngrok-free.app',
+        'https://gateway.api.attlaz.com',
     ];
 
     public function setUp(): void
@@ -33,19 +28,23 @@ class AuthenticationTest extends TestCase
 
 
         foreach ($this->endpoints as $endpoint) {
+            $client->setEndPoint($endpoint);
 
-
-            //  echo 'Get projects' . PHP_EOL;
+            // What is under test is that the token authenticates at all, not how many projects it can
+            // see — the old lower bound of 10 was tied to whatever the credential could reach years ago.
             $projects = $client->getProjectEndpoint()->getProjects();
-            $this->assertGreaterThanOrEqual(10, count($projects));
-//            foreach ($projects as $project) {
-//                echo '- ' . $project->name . PHP_EOL;
-//            }
+            $this->assertNotEmpty($projects->getData());
         }
 
     }
 
-    public function testWriteItem()
+    /**
+     * This used to introspect and then revoke the client's own client-credentials token. Neither is
+     * an API capability any more: the per-token GET route is gone, and the revoke route acts on a
+     * user's personal access tokens by id, not on a client-credentials token by its secret. What is
+     * still worth asserting is that a minted token is well-formed and that the client keeps working.
+     */
+    public function testClientCredentialsTokenIsUsable()
     {
 
         //$client = new \Attlaz\Client('zSGdVWE3FAS8kY5C', '6jhYgFPAUm9HmCus', false);
@@ -67,26 +66,22 @@ class AuthenticationTest extends TestCase
 
             $projects = $client->getProjectEndpoint()->getProjects();
 
-            $projectCount = count($projects);
+            $projectCount = count($projects->getData());
 
             $accessToken = $client->getAccessToken();
 
-            $token = $client->getAccessTokenEndpoint()->get($accessToken->getToken());
-            $this->assertEquals($accessToken->getToken(), $token['access_token']);
+            $this->assertInstanceOf(AccessToken::class, $accessToken);
+            $this->assertNotSame('', $accessToken->getToken());
+            // A minted token carries a lifetime, so the client knows when to renew it. A token with
+            // no expiry would be resent until the API started rejecting every call.
+            $this->assertNotNull($accessToken->getExpires());
+            $this->assertFalse($accessToken->hasExpired());
 
-
-            $revoked = $client->getAccessTokenEndpoint()->revoke($accessToken->getToken());
-            $this->assertTrue($revoked);
-
-            $tokenAfterRevocation = $client->getAccessTokenEndpoint()->get($accessToken->getToken());
-            $this->assertNull($tokenAfterRevocation);
-
+            // Still usable for a second call, and still the same token — it has not expired, so the
+            // client must not have minted a new one.
             $projects2 = $client->getProjectEndpoint()->getProjects();
-
-            $this->assertCount($projectCount, $projects2);
-
-            $newToken = $client->getAccessToken();
-            $this->assertNotEquals($newToken->getToken(), $accessToken->getToken());
+            $this->assertCount($projectCount, $projects2->getData());
+            $this->assertSame($accessToken->getToken(), $client->getAccessToken()->getToken());
 
         }
     }
