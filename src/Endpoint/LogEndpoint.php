@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Log\LogEntry;
@@ -18,7 +20,12 @@ class LogEndpoint extends Endpoint
     {
         $body = $logEntry;
 
-        $uri = '/logstreams/' . \base64_encode($logEntry->getLogStreamId()->__toString()) . '/logs';
+        // The id goes in as it is. The API also accepts a base64-encoded identifier, but only to keep
+        // reading the `<type>:<identifier>` form that was retired in May 2025 — nothing should be
+        // producing those any more. The JavaScript client sends the plain id too.
+        $uri = Path::build('/logstreams/:logStreamId/logs', [
+            'logStreamId' => $logEntry->getLogStreamId()->__toString(),
+        ]);
 
 
         $rawLogEntry = $this->requestObject($uri, $body, 'POST');
@@ -39,7 +46,7 @@ class LogEndpoint extends Endpoint
      */
     public function getLogStreams(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/projects/' . $projectId . '/logstreams';
+        $uri = Path::build('/projects/:projectId/logstreams', ['projectId' => $projectId]);
 
         $parser = static function (array $logStream): LogStream {
             $id = $logStream['id'];
@@ -52,4 +59,5 @@ class LogEndpoint extends Endpoint
 
         return $this->requestCollection($uri, $pagination, $parser);
     }
+
 }

@@ -12,12 +12,7 @@ use PHPUnit\Framework\TestCase;
 class LogTest extends TestCase
 {
     private array $endpoints = [
-//        'https://api.attlaz.com',
-//        'https://api.attlaz.com/1.6',
-//        'https://api.attlaz.com/1.7',
-//        'https://api.attlaz.com/1.8',
-        'https://api.attlaz.com/1.9',
-//        'https://api.attlaz.com/beta'
+        'https://gateway.api.attlaz.com',
     ];
 
     public function setUp(): void
@@ -39,7 +34,10 @@ class LogTest extends TestCase
             $client->setEndPoint($endpoint);
 
 
-            $logEntry = new LogEntry(new LogStreamId('test:php-client'), 'TEST API 3 ' . $this->generateRandomString(500), 'info', new \DateTime('now'));
+            // The shared test log stream (Zone.EU_ZONE.TEST_LOG_STREAM in the core library). The old
+            // `test:php-client` form was retired in May 2025 when log stream ids stopped carrying a
+            // type prefix, and the API no longer accepts it.
+            $logEntry = new LogEntry(new LogStreamId('lst_0nAQnvxYSscFpzE04eVD6VfVfJY'), 'TEST API 3 ' . $this->generateRandomString(500), 'info', new \DateTime('now'));
 
             //    try {
             $result = $client->getLogEndpoint()->saveLog($logEntry);
