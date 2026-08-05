@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz;
 
+use Attlaz\DataQuality\Endpoint\QualityEndpoint;
 use Attlaz\Endpoint\AccessTokenEndpoint;
 use Attlaz\Endpoint\CollectionsEndpoint;
 use Attlaz\Endpoint\ConfigEndpoint;
@@ -128,9 +129,8 @@ class Client
     public function sendRequest(RequestInterface $request): array
     {
         $response = null;
+        $startTime = \microtime(true);
         try {
-
-            $startTime = \microtime(true);
 
             $options = [
                 'debug' => ($this->debugLevel === 2),
@@ -275,8 +275,13 @@ class Client
         return $this->getEndPoint(CollectionsEndpoint::class);
     }
 
+    public function getQualityEndpoint(): QualityEndpoint
+    {
+        return $this->getEndPoint(QualityEndpoint::class);
+    }
+
     /**
-     * @template T
+     * @template T of Endpoint
      * @param class-string<T> $endpointClass
      * @return T
      * @throws \Exception
@@ -330,9 +335,13 @@ class Client
                 if ($accessToken !== null) {
                     $this->accessToken = $accessToken;
                 } else {
-                    $this->accessToken = $this->provider->getAccessToken('client_credentials', [
+                    $accessToken = $this->provider->getAccessToken('client_credentials', [
                         'scope' => 'all',
                     ]);
+                    if (!$accessToken instanceof AccessToken) {
+                        throw new \Exception('Unexpected access token type');
+                    }
+                    $this->accessToken = $accessToken;
                     if ($this->storeToken) {
                         TokenStorage::saveAccessToken($this->accessToken, $this->clientId, $this->clientSecret);
                     }
