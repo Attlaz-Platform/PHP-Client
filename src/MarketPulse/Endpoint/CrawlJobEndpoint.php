@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\CrawlJob;
@@ -28,14 +30,14 @@ class CrawlJobEndpoint extends Endpoint
             'status' => $crawlJob->status,
         ];
 
-        $response = $this->requestObject('/pulse/crawl-jobs/' . $crawlJob->id, $data, 'PATCH');
+        $response = $this->requestObject(Path::build('/pulse/crawl-jobs/:id', ['id' => $crawlJob->id]), $data, 'PATCH');
 
         return $this->parseCrawlJob($response);
     }
 
     public function getById(string $crawlJobId): CrawlJob|null
     {
-        $response = $this->requestObject('/pulse/crawl-jobs/' . $crawlJobId . '', null, 'GET');
+        $response = $this->requestObject(Path::build('/pulse/crawl-jobs/:crawlJobId', ['crawlJobId' => $crawlJobId]), null, 'GET');
         if ($response === null) {
             return null;
         }

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\CatalogProduct;
@@ -11,7 +13,9 @@ class CatalogProductEndpoint extends Endpoint
 {
     public function getProductByIdentifier(string $catalogId, string $identifier): CatalogProduct|null
     {
-        $response = $this->requestCollection('/catalogs/' . $catalogId . '/products?identifier=' . $identifier)->getData();
+        $uri = Path::build('/catalogs/:catalogId/products', ['catalogId' => $catalogId])
+            . '?identifier=' . \rawurlencode($identifier);
+        $response = $this->requestCollection($uri)->getData();
 
         if (count($response) === 0) {
             return null;
@@ -29,7 +33,7 @@ class CatalogProductEndpoint extends Endpoint
             'cost_price' => $product->costPrice,
         ];
 
-        $response = $this->requestObject('/catalogs/' . $product->catalogId . '/products', $data, 'POST');
+        $response = $this->requestObject(Path::build('/catalogs/:catalogId/products', ['catalogId' => $product->catalogId]), $data, 'POST');
 
         return $this->parseCatalogProduct($response);
     }
@@ -41,7 +45,7 @@ class CatalogProductEndpoint extends Endpoint
         ];
 
 
-        $response = $this->requestObject('/catalogs/' . $product->catalogId . '/products/' . $product->id, $data, 'PATCH');
+        $response = $this->requestObject(Path::build('/catalogs/:catalogId/products/:id', ['catalogId' => $product->catalogId, 'id' => $product->id]), $data, 'PATCH');
         // TODO: validate response
         return true;
     }

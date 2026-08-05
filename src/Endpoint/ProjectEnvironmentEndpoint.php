@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Helper\LoadAllHelper;
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
@@ -17,7 +19,7 @@ class ProjectEnvironmentEndpoint extends Endpoint
 
     public function getProjectEnvironmentById(string $projectEnvironmentId): ProjectEnvironment|null
     {
-        $uri = '/projectenvironments/' . $projectEnvironmentId;
+        $uri = Path::build('/projectenvironments/:projectEnvironmentId', ['projectEnvironmentId' => $projectEnvironmentId]);
 
         $rawEnvironment = $this->requestObject($uri);
         if ($rawEnvironment === null) {
@@ -49,7 +51,7 @@ class ProjectEnvironmentEndpoint extends Endpoint
      */
     public function getProjectEnvironments(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/projects/' . $projectId . '/environments';
+        $uri = Path::build('/projects/:projectId/environments', ['projectId' => $projectId]);
 
         $parser = fn(array $rawEnvironment): ProjectEnvironment => $this->parseProjectEnvironment($rawEnvironment);
 

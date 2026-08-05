@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\CrawlJobPage;
@@ -21,7 +23,7 @@ class CrawlJobPageEndpoint extends Endpoint
         ];
 
 
-        $response = $this->requestObject('/pulse/crawl-jobs/' . $vendorPage->crawlJobId . '/page', $data, 'POST');
+        $response = $this->requestObject(Path::build('/pulse/crawl-jobs/:crawlJobId/page', ['crawlJobId' => $vendorPage->crawlJobId]), $data, 'POST');
 
 
         return $this->parseCrawlJobPage($response);
@@ -42,7 +44,7 @@ class CrawlJobPageEndpoint extends Endpoint
         ];
 
 
-        $response = $this->requestObject('/pulse/crawl-job-pages/' . $crawlJobPage->id, $data, 'PATCH');
+        $response = $this->requestObject(Path::build('/pulse/crawl-job-pages/:id', ['id' => $crawlJobPage->id]), $data, 'PATCH');
         // TODO: validate response
         return true;
     }
@@ -50,7 +52,7 @@ class CrawlJobPageEndpoint extends Endpoint
 
     public function getById(string $crawlJobPageId): CrawlJobPage|null
     {
-        $response = $this->requestObject('/pulse/crawl-job-pages/' . $crawlJobPageId . '', null, 'GET');
+        $response = $this->requestObject(Path::build('/pulse/crawl-job-pages/:crawlJobPageId', ['crawlJobPageId' => $crawlJobPageId]), null, 'GET');
         if ($response === null) {
             return null;
         }

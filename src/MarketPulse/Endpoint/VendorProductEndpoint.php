@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\VendorProduct;
@@ -11,7 +13,9 @@ class VendorProductEndpoint extends Endpoint
 {
     public function getProductByIdentifier(string $vendorId, string $identifier): VendorProduct|null
     {
-        $response = $this->requestCollection('/pulse/vendors/' . $vendorId . '/products?identifier=' . $identifier)->getData();
+        $uri = Path::build('/pulse/vendors/:vendorId/products', ['vendorId' => $vendorId])
+            . '?identifier=' . \rawurlencode($identifier);
+        $response = $this->requestCollection($uri)->getData();
 
         if (count($response) === 0) {
             return null;
@@ -37,7 +41,7 @@ class VendorProductEndpoint extends Endpoint
             'properties' => $product->properties,
         ];
 
-        $response = $this->requestObject('/pulse/vendors/' . $product->vendorId . '/products', $data, 'POST');
+        $response = $this->requestObject(Path::build('/pulse/vendors/:vendorId/products', ['vendorId' => $product->vendorId]), $data, 'POST');
 
         return $this->parseVendorProduct($response);
     }
@@ -57,7 +61,7 @@ class VendorProductEndpoint extends Endpoint
             ['op' => 'add', 'path' => 'properties', 'value' => $product->properties],
         ];
 
-        $response = $this->requestObject('/pulse/vendors/' . $product->vendorId . '/products/' . $product->id, $data, 'PATCH');
+        $response = $this->requestObject(Path::build('/pulse/vendors/:vendorId/products/:id', ['vendorId' => $product->vendorId, 'id' => $product->id]), $data, 'PATCH');
         // TODO: validate response
         return true;
     }

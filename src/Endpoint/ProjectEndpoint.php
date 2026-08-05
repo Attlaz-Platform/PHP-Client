@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
@@ -16,7 +18,7 @@ class ProjectEndpoint extends Endpoint
 
     public function getProjectById(string $projectId): Project
     {
-        $uri = '/projects/' . $projectId;
+        $uri = Path::build('/projects/:projectId', ['projectId' => $projectId]);
 
         $rawProject = $this->requestObject($uri);
         if ($rawProject === null) {

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Model\AdapterConfiguration;
 use Attlaz\Model\AdapterConnection;
 use Attlaz\Model\AdapterConnectionConfigurationValue;
@@ -21,7 +23,7 @@ class ConnectionEndpoint extends Endpoint
      */
     public function getConnections(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/projects/' . $projectId . '/connections';
+        $uri = Path::build('/projects/:projectId/connections', ['projectId' => $projectId]);
 
         $parser = static fn(array $rawConnection): AdapterConnection => new AdapterConnection($rawConnection);
 
@@ -35,7 +37,7 @@ class ConnectionEndpoint extends Endpoint
      */
     public function getConnection(string $connectionId): AdapterConnection|null
     {
-        $uri = '/connections/' . $connectionId;
+        $uri = Path::build('/connections/:connectionId', ['connectionId' => $connectionId]);
         $rawConnection = $this->requestObject($uri);
         if ($rawConnection === null) {
             return null;
@@ -50,7 +52,7 @@ class ConnectionEndpoint extends Endpoint
      */
     public function getConnectionByKey(string $projectId, string $connectionKey): AdapterConnection|null
     {
-        $uri = '/projects/' . $projectId . '/connections/' . $connectionKey;
+        $uri = Path::build('/projects/:projectId/connections/:connectionKey', ['projectId' => $projectId, 'connectionKey' => $connectionKey]);
         $rawConnection = $this->requestObject($uri);
         if ($rawConnection === null) {
             return null;
@@ -65,7 +67,7 @@ class ConnectionEndpoint extends Endpoint
      */
     public function getAdapterConfiguration(string $adapterId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/adapters/' . $adapterId . '/configuration';
+        $uri = Path::build('/adapters/:adapterId/configuration', ['adapterId' => $adapterId]);
 
         $parser = static fn(array $rawConfiguration): AdapterConfiguration => new AdapterConfiguration($rawConfiguration);
 
@@ -79,7 +81,7 @@ class ConnectionEndpoint extends Endpoint
      */
     public function getConnectionConfiguration(string $connectionId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/connections/' . $connectionId . '/configuration';
+        $uri = Path::build('/connections/:connectionId/configuration', ['connectionId' => $connectionId]);
 
         $parser = static fn(array $rawConfiguration): AdapterConnectionConfigurationValue => new AdapterConnectionConfigurationValue($rawConfiguration);
 
@@ -88,7 +90,7 @@ class ConnectionEndpoint extends Endpoint
 
     public function createConnectionEvent(string $adapterConnectionId, string $type): bool
     {
-        $uri = '/adapters/connections/' . $adapterConnectionId . '/events';
+        $uri = Path::build('/adapters/connections/:adapterConnectionId/events', ['adapterConnectionId' => $adapterConnectionId]);
 
         $body = [
             'type' => $type,

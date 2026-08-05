@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 class CollectionsEndpoint extends Endpoint
 {
@@ -11,7 +13,7 @@ class CollectionsEndpoint extends Endpoint
     public function addRecord(string $collectionId, array $properties): bool
     {
 
-        $uri = '/collections/' . $collectionId . '/records';
+        $uri = Path::build('/collections/:collectionId/records', ['collectionId' => $collectionId]);
 
 
         $rawResult = $this->requestObject($uri, ['properties' => $properties], 'POST');

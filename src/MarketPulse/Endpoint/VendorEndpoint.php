@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\Vendor;
@@ -13,7 +15,7 @@ class VendorEndpoint extends Endpoint
 {
     public function getById(string $vendorId): Vendor|null
     {
-        $response = $this->requestObject('/pulse/vendors/' . $vendorId, null, 'GET');
+        $response = $this->requestObject(Path::build('/pulse/vendors/:vendorId', ['vendorId' => $vendorId]), null, 'GET');
         if ($response === null) {
             return null;
         }

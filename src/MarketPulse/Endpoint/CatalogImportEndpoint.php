@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\CatalogImport;
@@ -16,7 +18,7 @@ class CatalogImportEndpoint extends Endpoint
         $data = [
             // 'id' => $crawlJob->vendorId,
         ];
-        $response = $this->requestObject('/catalogs/' . $catalogId . '/imports', $data, 'POST');
+        $response = $this->requestObject(Path::build('/catalogs/:catalogId/imports', ['catalogId' => $catalogId]), $data, 'POST');
         var_dump($response);
         if ($response === null) {
             return null;
@@ -31,7 +33,7 @@ class CatalogImportEndpoint extends Endpoint
         $data = [
             'id' => $catalogImport->id,
         ];
-        $response = $this->requestObject('/catalogs/' . $catalogImport->catalogId . '/imports', $data, 'POST');
+        $response = $this->requestObject(Path::build('/catalogs/:catalogId/imports', ['catalogId' => $catalogImport->catalogId]), $data, 'POST');
         if ($response === null) {
             return null;
         }

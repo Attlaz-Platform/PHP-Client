@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Http\Path;
+
 
 use Attlaz\Endpoint\Endpoint;
 use Attlaz\MarketPulse\Model\Catalog;
@@ -11,7 +13,7 @@ class CatalogEndpoint extends Endpoint
 {
     public function getById(string $catalogId): Catalog|null
     {
-        $response = $this->requestObject('/catalogs/' . $catalogId, null, 'GET');
+        $response = $this->requestObject(Path::build('/catalogs/:catalogId', ['catalogId' => $catalogId]), null, 'GET');
         if ($response === null) {
             return null;
         }

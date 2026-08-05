@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\ProviderToken\ProviderToken;
 use Attlaz\Model\ProviderToken\ProviderTokenAccessToken;
@@ -16,7 +18,7 @@ class ProviderTokenEndpoint extends Endpoint
      */
     public function getProviderToken(string $providerTokenId): ProviderToken|null
     {
-        $uri = '/provider-tokens/' . $providerTokenId;
+        $uri = Path::build('/provider-tokens/:providerTokenId', ['providerTokenId' => $providerTokenId]);
         $response = $this->requestObject($uri);
         if ($response === null) {
             return null;
@@ -31,7 +33,7 @@ class ProviderTokenEndpoint extends Endpoint
      */
     public function getProviderTokenAccessToken(string $providerTokenId): ProviderTokenAccessToken|null
     {
-        $uri = '/provider-tokens/' . $providerTokenId . '/access-token';
+        $uri = Path::build('/provider-tokens/:providerTokenId/access-token', ['providerTokenId' => $providerTokenId]);
         $response = $this->requestObject($uri);
         if ($response === null) {
             return null;
@@ -46,7 +48,7 @@ class ProviderTokenEndpoint extends Endpoint
      */
     public function revokeProviderToken(string $providerTokenId): bool
     {
-        $uri = '/provider-tokens/' . $providerTokenId;
+        $uri = Path::build('/provider-tokens/:providerTokenId', ['providerTokenId' => $providerTokenId]);
         $response = $this->requestObject($uri, null, 'DELETE');
         if ($response === null) {
             return false;

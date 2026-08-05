@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Http\Path;
+
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
@@ -27,7 +29,7 @@ class FlowEndpoint extends Endpoint
             $body['project_environment'] = $projectEnvironmentId;
         }
 
-        $uri = '/flows/' . $flowId . '/flowrunrequests';
+        $uri = Path::build('/flows/:flowId/flowrunrequests', ['flowId' => $flowId]);
 
         $response = $this->requestObject($uri, $body, 'POST');
 
@@ -59,7 +61,7 @@ class FlowEndpoint extends Endpoint
      */
     public function getFlows(string $projectId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/projects/' . $projectId . '/flows';
+        $uri = Path::build('/projects/:projectId/flows', ['projectId' => $projectId]);
 
         $parser = function (array $record) {
             $flow = new Flow();
@@ -79,7 +81,8 @@ class FlowEndpoint extends Endpoint
     {
         $body = null;
 
-        $uri = '/flows/' . $flowId . '/runs?environment=' . $projectEnvironmentId;
+        $uri = Path::build('/flows/:flowId/runs', ['flowId' => $flowId])
+            . '?environment=' . \rawurlencode($projectEnvironmentId);
 
 
         $response = $this->requestObject($uri, $body, 'POST');
@@ -101,7 +104,7 @@ class FlowEndpoint extends Endpoint
 
     public function getFlowRun(string $flowRunId): FlowRun|null
     {
-        $uri = '/flowruns/' . $flowRunId . '/summaries';
+        $uri = Path::build('/flowruns/:flowRunId/summaries', ['flowRunId' => $flowRunId]);
 
         $rawResult = $this->requestObject($uri);
 
@@ -132,7 +135,7 @@ class FlowEndpoint extends Endpoint
      */
     public function getFlowRunSummaries(string $flowId, CursorPagination|null $pagination = null): CollectionResult
     {
-        $uri = '/flows/' . $flowId . '/runsummaries';
+        $uri = Path::build('/flows/:flowId/runsummaries', ['flowId' => $flowId]);
 
         $parser = function ($record) {
             $flowRunSummary = new FlowRunSummary();
@@ -155,7 +158,7 @@ class FlowEndpoint extends Endpoint
             'time' => $time,
         ];
 
-        $uri = '/flowruns/' . $flowRunId;
+        $uri = Path::build('/flowruns/:flowRunId', ['flowRunId' => $flowRunId]);
 
 
         $savedFlowRun = $this->requestObject($uri, $body, 'POST');
