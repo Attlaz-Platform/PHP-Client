@@ -36,6 +36,13 @@ class LoadAllHelper
             $page = $call($pagination);
             $records = $page->getData();
 
+            // An empty page that still claims has_more cannot be paged past: the cursor advances from
+            // the last record, so the next call would repeat this one forever. The server contradicted
+            // itself — say so rather than spin.
+            if (count($records) === 0 && $page->hasMore) {
+                throw new \Exception('loadAll stopped after ' . count($totalResult) . ' records: the API reported more results but returned an empty page, so paging cannot continue.');
+            }
+
             if (count($totalResult) + count($records) > 50000) {
                 throw new \Exception('loadAll exceeded 50,000 records (' . (count($totalResult) + count($records)) . '). This method is not intended for large datasets.');
             }

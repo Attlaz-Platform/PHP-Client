@@ -124,11 +124,44 @@ abstract class Endpoint
         return $response;
     }
 
+    /**
+     * A 2xx response that still carries `errors`. Rare — a failing request normally throws a
+     * RequestException from sendRequest long before this.
+     *
+     * @param array<string,mixed> $rawResponse
+     */
     private function parseErrors(array $rawResponse): void
     {
-        if (isset($rawResponse['errors']) && count($rawResponse['errors']) > 0) {
-            throw new \Exception($rawResponse['errors']);
+        if (!isset($rawResponse['errors']) || !\is_array($rawResponse['errors']) || \count($rawResponse['errors']) === 0) {
+            return;
         }
+
+        throw new \Exception('API returned errors: ' . self::describeErrors($rawResponse['errors']));
+    }
+
+    /**
+     * Render the `errors` payload as a message. Previously the raw array was handed to
+     * `new \Exception(...)`, which takes a string — so a real API error surfaced as a TypeError and
+     * the actual message was lost.
+     *
+     * @param array<mixed> $errors
+     */
+    private static function describeErrors(array $errors): string
+    {
+        $parts = [];
+        foreach ($errors as $error) {
+            if (\is_string($error)) {
+                $parts[] = $error;
+                continue;
+            }
+            if (\is_array($error) && isset($error['message']) && \is_string($error['message'])) {
+                $parts[] = $error['message'];
+                continue;
+            }
+            $parts[] = \json_encode($error, JSON_UNESCAPED_SLASHES) ?: 'unprintable error';
+        }
+
+        return \implode('; ', $parts);
     }
 
 
