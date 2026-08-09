@@ -32,7 +32,8 @@ class VendorProductEndpoint extends Endpoint
             'identifier' => $product->identifier,
             'gtin' => $product->gtin,
             'brand' => $product->brand,
-            // 'sku' => $product->sku,
+            'sku' => $product->sku,
+            'currency' => $product->currency,
             'url' => $product->url,
             'price' => $product->price,
             'original_price' => $product->originalPrice,
@@ -49,6 +50,7 @@ class VendorProductEndpoint extends Endpoint
     public function updateProduct(VendorProduct $product): bool
     {
         $data = [
+            ['op' => 'add', 'path' => 'name', 'value' => $product->name],
             ['op' => 'add', 'path' => 'price', 'value' => $product->price],
             ['op' => 'add', 'path' => 'original_price', 'value' => $product->originalPrice],
             ['op' => 'add', 'path' => 'brand', 'value' => $product->brand],
@@ -57,7 +59,8 @@ class VendorProductEndpoint extends Endpoint
             ['op' => 'add', 'path' => 'url', 'value' => $product->url],
             ['op' => 'add', 'path' => 'gtin', 'value' => $product->gtin],
             ['op' => 'add', 'path' => 'image', 'value' => $product->image],
-            // ['op' => 'add', 'path' => 'sku', 'value' => $product->sku],
+            ['op' => 'add', 'path' => 'sku', 'value' => $product->sku],
+            ['op' => 'add', 'path' => 'currency', 'value' => $product->currency],
             ['op' => 'add', 'path' => 'properties', 'value' => $product->properties],
         ];
 
@@ -77,7 +80,8 @@ class VendorProductEndpoint extends Endpoint
         $product->brand = $record['brand'];
         $product->identifier = $record['identifier'];
         $product->url = $record['url'];
-        // $product->sku = $record['sku'];
+        $product->sku = $record['sku'] ?? null;
+        $product->currency = $record['currency'] ?? null;
         $product->price = (float)$record['price'];
         $product->originalPrice = $record['original_price'] === null ? null : (float)$record['original_price'];
         $product->shippingCost = $record['shipping_cost'];

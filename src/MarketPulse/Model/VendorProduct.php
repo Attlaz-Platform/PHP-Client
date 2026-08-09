@@ -14,6 +14,8 @@ class VendorProduct
     public string|null $brand = null;
     public string|null $sku = null;
     public string|null $image = null;
+    /** ISO 4217 code. Null falls back to the vendor's primary currency. */
+    public string|null $currency = null;
     public float $price;
     public float|null $originalPrice;
     public float|null $shippingCost = null;
