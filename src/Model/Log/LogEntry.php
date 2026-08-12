@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Model\Log;
 
+use Attlaz\Helper\Rfc3339;
 use DateTimeInterface;
 
 class LogEntry implements \JsonSerializable
@@ -37,7 +38,7 @@ class LogEntry implements \JsonSerializable
     {
         return [
             'log_stream' => $this->logStreamId->__toString(),
-            'date'       => $this->date->format(DateTimeInterface::RFC3339_EXTENDED),
+            'date'       => Rfc3339::format($this->date),
             'level'      => $this->level,
             'message'    => $this->message,
             'context'    => $this->context,

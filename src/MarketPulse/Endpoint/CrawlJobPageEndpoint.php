@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Attlaz\MarketPulse\Endpoint;
 
+use Attlaz\Helper\Rfc3339;
 use Attlaz\Http\Path;
 
 
@@ -37,7 +38,7 @@ class CrawlJobPageEndpoint extends Endpoint
         $data = [
             ['op' => 'add', 'path' => 'content', 'value' => $crawlJobPage->content],
             ['op' => 'add', 'path' => 'crawled_at', 'value' =>
-                $crawlJobPage->crawledAt === null ? null : $crawlJobPage->crawledAt->format(\DateTimeInterface::RFC3339_EXTENDED),
+                $crawlJobPage->crawledAt === null ? null : Rfc3339::format($crawlJobPage->crawledAt),
 
 
             ],

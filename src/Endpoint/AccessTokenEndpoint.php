@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Helper\Rfc3339;
 use Attlaz\Http\Path;
 use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
@@ -53,7 +54,7 @@ class AccessTokenEndpoint extends Endpoint
         $response = $this->requestObject('/access-tokens', [
             'name' => $name,
             'scopes' => $scopes,
-            'expires_at' => $expiresAt->format(\DateTimeInterface::RFC3339_EXTENDED),
+            'expires_at' => Rfc3339::format($expiresAt),
         ], 'POST');
 
         if ($response === null) {

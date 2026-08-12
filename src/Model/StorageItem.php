@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Model;
 
+use Attlaz\Helper\Rfc3339;
 use DateTimeInterface;
 
 class StorageItem implements \JsonSerializable
@@ -19,7 +20,7 @@ class StorageItem implements \JsonSerializable
         return [
             'key'        => $this->key,
             'value'      => $this->value,
-            'expiration' => $this->expiration === null ? null : $this->expiration->format(DateTimeInterface::RFC3339_EXTENDED),
+            'expiration' => $this->expiration === null ? null : Rfc3339::format($this->expiration),
         ];
     }
 }

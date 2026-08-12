@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Attlaz\Endpoint;
 
+use Attlaz\Helper\Rfc3339;
 use Attlaz\Http\Path;
 
 use Attlaz\Model\AdapterConfiguration;
@@ -94,7 +95,7 @@ class ConnectionEndpoint extends Endpoint
 
         $body = [
             'type' => $type,
-            'time' => (new \DateTime('now'))->format(\DateTimeInterface::RFC3339_EXTENDED),
+            'time' => Rfc3339::format(new \DateTime('now')),
             'data' => null,
         ];
         $result = $this->requestObject($uri, $body, 'POST');
