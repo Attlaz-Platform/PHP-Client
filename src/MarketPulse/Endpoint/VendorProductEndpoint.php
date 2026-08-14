@@ -7,6 +7,7 @@ use Attlaz\Http\Path;
 
 
 use Attlaz\Endpoint\Endpoint;
+use Attlaz\MarketPulse\Model\StockStatus;
 use Attlaz\MarketPulse\Model\VendorProduct;
 
 class VendorProductEndpoint extends Endpoint
@@ -38,7 +39,7 @@ class VendorProductEndpoint extends Endpoint
             'price' => $product->price,
             'original_price' => $product->originalPrice,
             'shipping_cost' => $product->shippingCost,
-            'is_in_stock' => $product->isInStock,
+            'stock_status' => $product->stockStatus->value,
             'properties' => $product->properties,
         ];
 
@@ -55,7 +56,7 @@ class VendorProductEndpoint extends Endpoint
             ['op' => 'add', 'path' => 'original_price', 'value' => $product->originalPrice],
             ['op' => 'add', 'path' => 'brand', 'value' => $product->brand],
             ['op' => 'add', 'path' => 'shipping_cost', 'value' => $product->shippingCost],
-            ['op' => 'add', 'path' => 'is_in_stock', 'value' => $product->isInStock],
+            ['op' => 'add', 'path' => 'stock_status', 'value' => $product->stockStatus->value],
             ['op' => 'add', 'path' => 'url', 'value' => $product->url],
             ['op' => 'add', 'path' => 'gtin', 'value' => $product->gtin],
             ['op' => 'add', 'path' => 'image', 'value' => $product->image],
@@ -85,7 +86,7 @@ class VendorProductEndpoint extends Endpoint
         $product->price = (float)$record['price'];
         $product->originalPrice = $record['original_price'] === null ? null : (float)$record['original_price'];
         $product->shippingCost = $record['shipping_cost'];
-        $product->isInStock = $record['is_in_stock'];
+        $product->stockStatus = StockStatus::fromRecord($record['stock_status'] ?? null);
 
         $product->createdAt = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['created_at']);
         $product->updatedAt = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['updated_at']);

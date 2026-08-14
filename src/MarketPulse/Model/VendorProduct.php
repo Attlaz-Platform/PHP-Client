@@ -19,7 +19,7 @@ class VendorProduct
     public float $price;
     public float|null $originalPrice;
     public float|null $shippingCost = null;
-    public bool|null $isInStock = null;
+    public StockStatus $stockStatus = StockStatus::Unknown;
     public array|null $properties = null;
     public \DateTime $createdAt;
     public \DateTime $updatedAt;
