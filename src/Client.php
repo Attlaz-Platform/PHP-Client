@@ -158,12 +158,48 @@ class Client
             $options['body'] = \json_encode($body, JSON_THROW_ON_ERROR);
         }
 
-        $options['headers'] = ['Content-Type' => 'application/json'];
+        // Accept is stated explicitly, even though JSON is what the API returns by default today.
+        // The server plans to make bytes the default once no request arrives without an Accept, and a
+        // silent client is indistinguishable from one that did not care — which is what makes that
+        // flip unsafe.
+        $options['headers'] = ['Content-Type' => 'application/json', 'Accept' => 'application/json'];
 
+        return $this->buildAuthenticatedRequest($method, $uri, $options);
+    }
+
+    /**
+     * A request whose body IS raw bytes. Metadata that would live in a JSON envelope travels as
+     * headers instead, because there is no envelope left to put it in.
+     *
+     * @param array<string, string> $headers
+     */
+    public function createBinaryRequest(string $method, string $uri, string|null $body = null, array $headers = []): RequestInterface
+    {
+        $this->authenticate();
+        if ($this->accessToken === null) {
+            throw new \Exception('Unable to create request: not authenticated');
+        }
+
+        $options = [];
+        if ($body !== null) {
+            $options['body'] = $body;
+        }
+        $options['headers'] = \array_merge([
+            'Content-Type' => 'application/octet-stream',
+            'Accept' => 'application/octet-stream',
+        ], $headers);
+
+        return $this->buildAuthenticatedRequest($method, $uri, $options);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function buildAuthenticatedRequest(string $method, string $uri, array $options): RequestInterface
+    {
         if (!str_starts_with($uri, 'https://') && !str_starts_with($uri, 'http://')) {
             $uri = $this->endPoint . $uri;
         }
-
 
         // The raw string, not a token object: league's BearerAuthorizationTrait concatenates whatever
         // it is given onto "Bearer ", and it documents accepting a string. Passing it this way keeps
@@ -180,6 +216,34 @@ class Client
     {
         $this->accessToken = $accessToken;
         $this->accessTokenIsCallerSupplied = true;
+    }
+
+    /**
+     * Send a request whose response is raw bytes, returned undecoded. A JSON decode here would fail
+     * on binary, and decoding to text would corrupt it — a UTF-8 round trip replaces every invalid
+     * sequence, so the bytes that come back are not the bytes that were stored.
+     */
+    public function sendBinaryRequest(RequestInterface $request): string
+    {
+        try {
+            $options = [
+                'debug' => ($this->debugLevel === 2),
+                'timeout' => $this->timeout,
+                'connect_timeout' => $this->connectTimeout,
+                'read_timeout' => $this->timeout,
+            ];
+            $response = $this->provider->getHttpClient()
+                ->send($request, $options);
+
+            return $response->getBody()
+                ->getContents();
+        } catch (ClientException $ex) {
+            $exception = new RequestException($ex->getMessage());
+            $exception->httpCode = $ex->getCode();
+            throw $exception;
+        } catch (\Throwable $ex) {
+            throw new RequestException($ex->getMessage());
+        }
     }
 
     public function sendRequest(RequestInterface $request): array

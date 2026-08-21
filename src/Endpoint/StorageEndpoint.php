@@ -10,6 +10,7 @@ use Attlaz\Model\CollectionResult;
 use Attlaz\Model\CursorPagination;
 use Attlaz\Model\Exception\RequestException;
 use Attlaz\Model\StorageItem;
+use Attlaz\Helper\Rfc3339;
 use Attlaz\Model\StorageItemInformation;
 use DateTimeInterface;
 
@@ -29,6 +30,20 @@ use DateTimeInterface;
  */
 class StorageEndpoint extends Endpoint
 {
+
+    /**
+     * The item URI. The bucket segment is optional on the wire, so both shapes exist and every
+     * caller was building the same if/else inline.
+     */
+    private function buildItemUri(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey): string
+    {
+        if (!empty($bucketKey)) {
+            return Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/:bucketKey/items/:storageItemKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'bucketKey' => $bucketKey, 'storageItemKey' => $storageItemKey]);
+        }
+
+        return Path::build('/projectenvironments/:projectEnvironmentId/storage/:storageType/items/:storageItemKey', ['projectEnvironmentId' => $projectEnvironmentId, 'storageType' => $storageType, 'storageItemKey' => $storageItemKey]);
+    }
+
 
 
     public function getItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): StorageItem|null
@@ -69,6 +84,38 @@ class StorageEndpoint extends Endpoint
     public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): bool
     {
         return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey) !== null;
+    }
+
+    /**
+     * A stored item's bytes, undecoded.
+     */
+    public function getItemBytes(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): string
+    {
+        $uri = $this->buildItemUri($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey);
+
+        return $this->requestBytes($uri);
+    }
+
+    /**
+     * Store raw bytes. Metadata travels as headers because the body is the value.
+     *
+     * Pass $contentType for anything a browser will load: the CDN reads it back as the response
+     * Content-Type, and without it an image is served as application/octet-stream, which downloads
+     * instead of rendering.
+     */
+    public function setItemBytes(string $projectEnvironmentId, string $storageType, string $storageItemKey, string $value, DateTimeInterface|null $expiration = null, string|null $contentType = null, string|null $bucketKey = null): void
+    {
+        $uri = $this->buildItemUri($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey);
+
+        $headers = [];
+        if ($expiration !== null) {
+            $headers['X-Attlaz-Expiration'] = Rfc3339::format($expiration);
+        }
+        if ($contentType !== null) {
+            $headers['X-Attlaz-Content-Type'] = $contentType;
+        }
+
+        $this->requestBytes($uri, 'POST', $value, $headers);
     }
 
     public function setItem(string $projectEnvironmentId, string $storageType, StorageItem $storageItem, string|null $bucketKey = null): bool

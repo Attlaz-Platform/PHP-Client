@@ -25,6 +25,19 @@ abstract class Endpoint
     }
 
     /**
+     * The response body as raw bytes. For a resource whose representation is binary — a stored
+     * image, an archive — where decoding would destroy it.
+     *
+     * @param array<string, string> $headers
+     */
+    public function requestBytes(string $uri, string $method = 'GET', string|null $body = null, array $headers = []): string
+    {
+        $request = $this->client->createBinaryRequest($method, $uri, $body, $headers);
+
+        return $this->client->sendBinaryRequest($request);
+    }
+
+    /**
      * Fetch one page of a cursor-paginated collection endpoint. Pass a $pagination to
      * control limit/cursor; inspect CollectionResult::$hasMore to know whether more pages
      * exist. To collect an entire collection, use {@see \Attlaz\Helper\LoadAllHelper::loadAll()}.
