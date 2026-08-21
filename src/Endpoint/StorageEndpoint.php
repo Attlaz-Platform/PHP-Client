@@ -81,9 +81,27 @@ class StorageEndpoint extends Endpoint
 
     }
 
+    /**
+     * Whether an item exists, without transferring it.
+     *
+     * Uses HEAD: this used to call getItem(), which downloads the whole value to answer a yes/no —
+     * for a content-addressed check ("do I already have these bytes?") that is the entire object.
+     */
     public function hasItem(string $projectEnvironmentId, string $storageType, string $storageItemKey, string|null $bucketKey = null): bool
     {
-        return $this->getItem($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey) !== null;
+        $uri = $this->buildItemUri($projectEnvironmentId, $storageType, $storageItemKey, $bucketKey);
+
+        try {
+            $this->requestBytes($uri, 'HEAD');
+
+            return true;
+        } catch (RequestException $exception) {
+            if ($exception->httpCode === 404) {
+                return false;
+            }
+
+            throw $exception;
+        }
     }
 
     /**
