@@ -141,9 +141,13 @@ class Client
 
 
         $rawResponse = $this->sendRequest($request);
-        if (isset($rawResponse['version'])) {
-            return $rawResponse['version'];
+
+        // The gateway is the first entry, and the only one a non-administrator is shown.
+        $gateway = $rawResponse['apis'][0] ?? null;
+        if (is_array($gateway) && isset($gateway['version']) && is_string($gateway['version'])) {
+            return $gateway['version'];
         }
+
         return null;
     }
 
