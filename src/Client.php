@@ -135,7 +135,7 @@ class Client
 
     public function getApiVersion(): ?string
     {
-        $uri = '/system/health';
+        $uri = '/system/info';
 
         $request = $this->createRequest('GET', $uri);
 
