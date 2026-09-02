@@ -13,6 +13,10 @@ class VendorProduct
     public string|null $gtin = null;
     public string|null $brand = null;
     public string|null $sku = null;
+    public string|null $manufacturerPartNumber = null;
+    public string|null $variantGroup = null;
+    /** @var array<int, array{name: string, value: string, code?: string|null, unit?: string|null, numeric_value?: float|null}>|null */
+    public array|null $variantAxes = null;
     public string|null $image = null;
     /** ISO 4217 code. Null falls back to the vendor's primary currency. */
     public string|null $currency = null;

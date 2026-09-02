@@ -34,6 +34,9 @@ class VendorProductEndpoint extends Endpoint
             'gtin' => $product->gtin,
             'brand' => $product->brand,
             'sku' => $product->sku,
+            'manufacturer_part_number' => $product->manufacturerPartNumber,
+            'variant_group' => $product->variantGroup,
+            'variant_axes' => $product->variantAxes,
             'currency' => $product->currency,
             'url' => $product->url,
             'price' => $product->price,
@@ -61,6 +64,8 @@ class VendorProductEndpoint extends Endpoint
             ['op' => 'add', 'path' => 'gtin', 'value' => $product->gtin],
             ['op' => 'add', 'path' => 'image', 'value' => $product->image],
             ['op' => 'add', 'path' => 'sku', 'value' => $product->sku],
+            ['op' => 'add', 'path' => 'manufacturer_part_number', 'value' => $product->manufacturerPartNumber],
+            ['op' => 'add', 'path' => 'variant_group', 'value' => $product->variantGroup],
             ['op' => 'add', 'path' => 'currency', 'value' => $product->currency],
             ['op' => 'add', 'path' => 'properties', 'value' => $product->properties],
         ];
@@ -82,6 +87,9 @@ class VendorProductEndpoint extends Endpoint
         $product->identifier = $record['identifier'];
         $product->url = $record['url'];
         $product->sku = $record['sku'] ?? null;
+        $product->manufacturerPartNumber = $record['manufacturer_part_number'] ?? null;
+        $product->variantGroup = $record['variant_group'] ?? null;
+        $product->variantAxes = $record['variant_axes'] ?? null;
         $product->currency = $record['currency'] ?? null;
         $product->price = (float)$record['price'];
         $product->originalPrice = $record['original_price'] === null ? null : (float)$record['original_price'];
