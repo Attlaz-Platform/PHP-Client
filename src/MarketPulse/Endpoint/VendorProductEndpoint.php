@@ -96,6 +96,7 @@ class VendorProductEndpoint extends Endpoint
         $product->originalPrice = $record['original_price'] === null ? null : (float)$record['original_price'];
         $product->shippingCost = $record['shipping_cost'];
         $product->stockStatus = StockStatus::fromRecord($record['stock_status'] ?? null);
+        $product->properties = $record['properties'] ?? null;
 
         $product->createdAt = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['created_at']);
         $product->updatedAt = \DateTime::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $record['updated_at']);
