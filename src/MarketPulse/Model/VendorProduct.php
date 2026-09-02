@@ -15,7 +15,7 @@ class VendorProduct
     public string|null $sku = null;
     public string|null $manufacturerPartNumber = null;
     public string|null $variantGroup = null;
-    /** @var array<int, array{name: string, value: string, code?: string|null, unit?: string|null, numeric_value?: float|null}>|null */
+    /** @var array<int, array{name: string, value: string, code?: string|null, unit?: string|null, numericValue?: float|null}>|null */
     public array|null $variantAxes = null;
     public string|null $image = null;
     /** ISO 4217 code. Null falls back to the vendor's primary currency. */
