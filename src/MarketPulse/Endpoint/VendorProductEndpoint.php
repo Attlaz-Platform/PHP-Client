@@ -66,6 +66,7 @@ class VendorProductEndpoint extends Endpoint
             ['op' => 'add', 'path' => 'sku', 'value' => $product->sku],
             ['op' => 'add', 'path' => 'manufacturer_part_number', 'value' => $product->manufacturerPartNumber],
             ['op' => 'add', 'path' => 'variant_group', 'value' => $product->variantGroup],
+            ['op' => 'add', 'path' => 'variant_axes', 'value' => $product->variantAxes],
             ['op' => 'add', 'path' => 'currency', 'value' => $product->currency],
             ['op' => 'add', 'path' => 'properties', 'value' => $product->properties],
         ];
